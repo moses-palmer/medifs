@@ -1,0 +1,8 @@
+[package]
+name = "medifs"
+version = "0.1.0"
+authors = ["Moses Palmér <mosespalmer@gmail.com>"]
+
+[dependencies]
+fuse = "0.3"
+fuse_mt = "0.4"
