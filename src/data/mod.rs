@@ -1,3 +1,6 @@
+mod cache;
+pub use self::cache::{AddItemResult, Cache, Entry};
+
 mod item;
 pub use self::item::Item;
 
@@ -9,6 +12,11 @@ pub use self::tag::Tag;
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    use std::collections;
+    use std::path;
+
     use time;
 
     /// Creates a simple time structure.
@@ -47,5 +55,20 @@ mod tests {
             tm_isdst: -1,
             tm_utcoff: 0,
         }
+    }
+
+    /// Creates a simple item.
+    ///
+    /// # Arguments
+    /// *  `name` - The item source name.
+    /// *  `year` - The year part.
+    /// *  `month` - The month part.
+    /// *  `day` - The day part.
+    pub fn item(name: &str, year: i32, month: i32, day: i32) -> Item {
+        Item::new(
+            path::Path::new(name),
+            tm(year, month, day, 0, 0, 0),
+            collections::HashSet::new(),
+        )
     }
 }

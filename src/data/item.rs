@@ -112,7 +112,7 @@ mod tests {
 
     /// Tests creation of item of unknown type.
     #[test]
-    fn newi_unknown() {
+    fn new_unknown() {
         let item = Item::new(
             path::Path::new("some file.ext"),
             tm(2000, 01, 01, 12, 0, 0),
