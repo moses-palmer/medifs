@@ -5,6 +5,9 @@ extern crate mime;
 extern crate mime_guess;
 extern crate time;
 
+#[cfg(test)]
+extern crate tempdir;
+
 use std::path::Path;
 use std::process;
 
