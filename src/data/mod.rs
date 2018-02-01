@@ -11,7 +11,7 @@ mod tag;
 pub use self::tag::Tag;
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use super::*;
 
     use std::collections;
