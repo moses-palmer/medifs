@@ -1,4 +1,5 @@
 use fuse_mt;
+use libc;
 
 use time;
 
@@ -75,5 +76,34 @@ impl<'a> From<&'a data::Entry> for fuse_mt::ResultEntry {
 impl ForUser for fuse_mt::FileAttr {
     fn for_user(self, uid: u32, gid: u32) -> Self {
         Self { uid, gid, ..self }
+    }
+}
+
+
+impl<'a> From<&'a data::Entry> for fuse_mt::ResultReaddir {
+    fn from(source: &'a data::Entry) -> fuse_mt::ResultReaddir {
+        match source {
+            &data::Entry::Directory(ref tree) => {
+                Ok(
+                    tree.iter()
+                        .map(|(name, entry)| {
+                            fuse_mt::DirectoryEntry {
+                                name: name.to_os_string(),
+                                kind: match entry {
+                                    &data::Entry::Directory(_) => {
+                                        fuse_mt::FileType::Directory
+                                    }
+                                    &data::Entry::Item(_) => {
+                                        fuse_mt::FileType::RegularFile
+                                    }
+                                },
+                            }
+                        })
+                        .collect(),
+                )
+            }
+            _ => Err(libc::ENOTDIR),
+        }
+
     }
 }

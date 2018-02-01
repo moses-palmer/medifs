@@ -98,6 +98,27 @@ impl fuse_mt::FilesystemMT for MediaFS {
             .into();
         result.map(|(ttl, fa)| (ttl, fa.for_user(req.uid, req.gid)))
     }
+
+    fn opendir(
+        &self,
+        _req: fuse_mt::RequestInfo,
+        path: &path::Path,
+        _flags: u32,
+    ) -> fuse_mt::ResultOpen {
+        match lookup!(cache!(self.cache), &path) {
+            &data::Entry::Directory(_) => Ok((0, 0)),
+            _ => Err(libc::ENOTDIR),
+        }
+    }
+
+    fn readdir(
+        &self,
+        _req: fuse_mt::RequestInfo,
+        path: &path::Path,
+        _fh: u64,
+    ) -> fuse_mt::ResultReaddir {
+        lookup!(cache!(self.cache), &path).into()
+    }
 }
 
 
@@ -136,6 +157,37 @@ mod tests {
             source_meta.len(),
             target_meta.len(),
         );
+    }
+
+    /// Tests that reading from the FUSE file system yields the same data as
+    /// reading from the actual file.
+    #[test]
+    fn test_readdir() {
+        let data = "hello world";
+        let (mount_point, _source_dir, _session, paths) =
+            mount(
+                vec![
+                    ("test1.jpg", data, 2000, 1, 1),
+                    ("test2.jpg", data, 2000, 1, 1),
+                    ("test3.jpg", data, 2000, 1, 2),
+                ].into_iter(),
+            );
+        let (_, ref directory1) = paths[0];
+        assert_eq!(
+            io::Error::from_raw_os_error(libc::ENOENT).kind(),
+            fs::read_dir(
+                mount_point.path().join("invalid/path")
+            ).unwrap_err().kind(),
+        );
+        assert_eq!(
+            io::Error::from_raw_os_error(libc::ENOTDIR).kind(),
+            fs::read_dir(directory1).unwrap_err().kind(),
+        );
+        assert_eq!(
+            2,
+            fs::read_dir(directory1.parent().unwrap()).unwrap().count(),
+        );
+        let (_, ref directory2) = paths[2];
     }
 
     /// An item to populate a file system.
