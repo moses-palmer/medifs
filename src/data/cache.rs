@@ -2,6 +2,8 @@ use std::collections;
 use std::ffi;
 use std::path;
 
+use time;
+
 use data;
 
 
@@ -21,6 +23,21 @@ pub enum Entry {
 
     /// An item entry. The value is the item.
     Item(data::Item),
+}
+
+impl Entry {
+    /// Returns the latest timestamp selected from this and child entries.
+    pub fn timestamp(&self) -> time::Timespec {
+        match self {
+            &Entry::Directory(ref tree) => {
+                tree.values()
+                    .max_by(|a, b| a.timestamp().cmp(&b.timestamp()))
+                    .map(|entry| entry.timestamp())
+                    .unwrap_or(time::Timespec::new(0, 0))
+            }
+            &Entry::Item(ref item) => item.timestamp.to_timespec(),
+        }
+    }
 }
 
 
@@ -214,4 +231,30 @@ mod tests {
             cache.lookup(&expected_path2),
         );
     }
+
+    /// Tests that timestamps are correct.
+    #[test]
+    fn test_timestamp() {
+        let mut cache = Cache::new();
+
+        let item1 = item("test1.jpg", 2000, 1, 1);
+        let expected_path1 =
+            path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
+        assert_eq!(
+            expected_path1,
+            cache.add_item(&"/base", item1.clone()).unwrap(),
+        );
+        assert_eq!(
+            Some(item1.timestamp.to_timespec()),
+            cache.lookup(&"/").map(|e| e.timestamp()),
+        );
+
+        let item2 = item("test2.jpg", 2000, 1, 2);
+        cache.add_item(&"/base", item2.clone()).unwrap();
+        assert_eq!(
+            Some(item2.timestamp.to_timespec()),
+            cache.lookup(&"/").map(|e| e.timestamp()),
+        );
+    }
+
 }
