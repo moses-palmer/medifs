@@ -6,3 +6,7 @@ authors = ["Moses Palmér <mosespalmer@gmail.com>"]
 [dependencies]
 fuse = "0.3"
 fuse_mt = "0.4"
+libc = "0.2"
+mime = "0.3"
+mime_guess = "2.0.0-alpha.3"
+time = "0.1"

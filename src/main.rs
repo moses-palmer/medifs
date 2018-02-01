@@ -1,9 +1,14 @@
 extern crate fuse;
 extern crate fuse_mt;
+extern crate libc;
+extern crate mime;
+extern crate mime_guess;
+extern crate time;
 
 use std::path::Path;
 use std::process;
 
+mod data;
 mod files;
 
 
