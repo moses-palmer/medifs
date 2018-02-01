@@ -2,6 +2,7 @@ use fuse_mt;
 
 mod traits;
 use self::traits::*;
+mod util;
 
 
 /// The actual FUSE implementation.
