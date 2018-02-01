@@ -17,7 +17,7 @@ mod files;
 
 fn main() {
     let path = Path::new(".");
-    let mediafs = files::MediaFS::new();
+    let mediafs = files::MediaFS::new("All".into());
 
     if let Err(_) = fuse_mt::mount(
         fuse_mt::FuseMT::new(mediafs, 1),
