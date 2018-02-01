@@ -4,6 +4,9 @@ mod traits;
 use self::traits::*;
 mod util;
 
+#[macro_use]
+mod macros;
+
 
 /// The actual FUSE implementation.
 pub struct MediaFS;
