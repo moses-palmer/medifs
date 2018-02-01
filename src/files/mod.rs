@@ -1,5 +1,8 @@
 use fuse_mt;
 
+mod traits;
+use self::traits::*;
+
 
 /// The actual FUSE implementation.
 pub struct MediaFS;
