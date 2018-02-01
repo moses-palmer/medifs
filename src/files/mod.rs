@@ -1,4 +1,8 @@
 use std::ffi;
+use std::fs;
+use std::io;
+use std::io::{Read, Seek};
+use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::path;
 use std::sync;
 
@@ -119,6 +123,65 @@ impl fuse_mt::FilesystemMT for MediaFS {
     ) -> fuse_mt::ResultReaddir {
         lookup!(cache!(self.cache), &path).into()
     }
+
+    fn open(
+        &self,
+        _req: fuse_mt::RequestInfo,
+        path: &path::Path,
+        flags: u32,
+    ) -> fuse_mt::ResultOpen {
+        match lookup!(cache!(self.cache), &path) {
+            &data::Entry::Item(ref item) => {
+                fs::File::open(&item.path)
+                    .map(|f| (f.into_raw_fd() as u64, flags))
+                    .map_err(util::map_error)
+            }
+            _ => Err(libc::EINVAL),
+        }
+    }
+
+    fn read(
+        &self,
+        _req: fuse_mt::RequestInfo,
+        _path: &path::Path,
+        fh: u64,
+        offset: u64,
+        size: u32,
+    ) -> fuse_mt::ResultData {
+        // Recreate file
+        let mut file = unsafe { fs::File::from_raw_fd(fh as i32) };
+
+        // Read the file
+        let result = file.seek(io::SeekFrom::Start(offset))
+            .and_then(|_| {
+                let mut buffer = vec![0u8; size as usize];
+                file.read(&mut buffer).map(|size| {
+                    buffer.resize(size, 0u8);
+                    buffer
+                })
+            })
+            .map_err(util::map_error);
+
+        // Release file
+        file.into_raw_fd();
+
+        result
+    }
+
+    fn release(
+        &self,
+        _req: fuse_mt::RequestInfo,
+        _path: &path::Path,
+        fh: u64,
+        _flags: u32,
+        _lock_owner: u64,
+        _flush: bool,
+    ) -> fuse_mt::ResultEmpty {
+        // Recreate file and drop it
+        unsafe { fs::File::from_raw_fd(fh as i32) };
+
+        Ok(())
+    }
 }
 
 
@@ -188,6 +251,27 @@ mod tests {
             fs::read_dir(directory1.parent().unwrap()).unwrap().count(),
         );
         let (_, ref directory2) = paths[2];
+    }
+
+    /// Tests that reading from the FUSE file system yields the same data as
+    /// reading from the actual file.
+    #[test]
+    fn test_read() {
+        let data = "hello world";
+        let (mount_point, _source_dir, _session, paths) =
+            mount(vec![("test.jpg", data, 2000, 1, 1)].into_iter());
+
+        let (ref source, ref target) = paths[0];
+        assert_eq!(
+            io::Error::from_raw_os_error(libc::ENOENT).kind(),
+            fs::File::open(
+                mount_point.path().join("invalid/path"),
+            ).unwrap_err().kind(),
+        );
+        assert_eq!(
+            read_file(source),
+            read_file(target),
+        );
     }
 
     /// An item to populate a file system.
