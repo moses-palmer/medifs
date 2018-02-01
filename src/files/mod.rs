@@ -82,4 +82,8 @@ impl MediaFS {
 }
 
 
-impl fuse_mt::FilesystemMT for MediaFS {}
+impl fuse_mt::FilesystemMT for MediaFS {
+    fn init(&self, _req: fuse_mt::RequestInfo) -> fuse_mt::ResultEmpty {
+        Ok(())
+    }
+}
