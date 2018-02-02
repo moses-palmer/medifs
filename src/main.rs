@@ -5,6 +5,9 @@ extern crate mime;
 extern crate mime_guess;
 extern crate time;
 
+#[cfg(test)]
+extern crate tempdir;
+
 use std::path::Path;
 use std::process;
 
@@ -14,7 +17,7 @@ mod files;
 
 fn main() {
     let path = Path::new(".");
-    let mediafs = files::MediaFS::new();
+    let mediafs = files::MediaFS::new("All".into());
 
     if let Err(_) = fuse_mt::mount(
         fuse_mt::FuseMT::new(mediafs, 1),
