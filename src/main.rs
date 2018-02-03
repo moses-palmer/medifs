@@ -1,3 +1,5 @@
+#[macro_use]
+extern crate clap;
 extern crate fuse;
 extern crate fuse_mt;
 extern crate libc;
@@ -19,13 +21,13 @@ fn main() {
     let path = Path::new(".");
     let mediafs = files::MediaFS::new("All".into());
 
-    if let Err(_) = fuse_mt::mount(
+    if let Err(e) = fuse_mt::mount(
         fuse_mt::FuseMT::new(mediafs, 1),
         &path,
         &[],
     )
     {
-        println!("Failed to mount media file system");
+        println!("Failed to mount media file system: {}", e);
         process::exit(1);
     }
 }
