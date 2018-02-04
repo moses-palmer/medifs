@@ -10,6 +10,7 @@ extern crate time;
 #[cfg(test)]
 extern crate tempdir;
 
+use std::ffi;
 use std::process;
 
 mod data;
@@ -27,6 +28,14 @@ fn main() {
                 .help("The target mount point.")
                 .required(true),
         )
+        .arg(
+            clap::Arg::with_name("FUSE_OPTION")
+                .help("Options passed to FUSE")
+                .multiple(true)
+                .value_delimiter(",")
+                .short("o")
+                .takes_value(true),
+        )
         .get_matches();
 
     let mount_point = matches
@@ -34,12 +43,26 @@ fn main() {
         .unwrap()
         .parse::<types::MountPoint>()
         .unwrap_or_else(|e| { e.exit(); });
+    let fuse_options = matches
+        .values_of("FUSE_OPTION")
+        .map(|values| {
+            values.fold(vec![], |mut acc, o| {
+                acc.push(ffi::OsString::from("-o"));
+                acc.push(ffi::OsString::from(o));
+                acc
+            })
+        })
+        .unwrap_or(vec![]);
     let mediafs = files::MediaFS::new("All".into());
 
     if let Err(e) = fuse_mt::mount(
         fuse_mt::FuseMT::new(mediafs, 1),
         &mount_point,
-        &[],
+        fuse_options
+            .iter()
+            .map(|s| s.as_os_str())
+            .collect::<Vec<&ffi::OsStr>>()
+            .as_slice(),
     )
     {
         println!("Failed to mount media file system: {}", e);
