@@ -1,5 +1,6 @@
 [package]
 name = "medifs"
+description = "Provides access to media files using FUSE"
 version = "0.1.0"
 authors = ["Moses Palmér <mosespalmer@gmail.com>"]
 
