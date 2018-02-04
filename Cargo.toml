@@ -1,9 +1,11 @@
 [package]
 name = "medifs"
+description = "Provides access to media files using FUSE"
 version = "0.1.0"
 authors = ["Moses Palmér <mosespalmer@gmail.com>"]
 
 [dependencies]
+clap = "2.29"
 fuse = "0.3"
 fuse_mt = "0.4"
 libc = "0.2"
