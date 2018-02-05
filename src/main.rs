@@ -6,6 +6,7 @@ extern crate libc;
 extern crate mime;
 extern crate mime_guess;
 extern crate time;
+extern crate walkdir;
 
 #[cfg(test)]
 extern crate tempdir;
