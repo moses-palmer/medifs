@@ -12,6 +12,7 @@ extern crate tempdir;
 
 use std::ffi;
 use std::process;
+use std::sync;
 
 mod data;
 mod files;
@@ -53,7 +54,8 @@ fn main() {
             })
         })
         .unwrap_or(vec![]);
-    let mediafs = files::MediaFS::new("All".into());
+    let cache = sync::Arc::new(files::Cache::new("All".into()));
+    let mediafs = files::MediaFS::new(cache);
 
     if let Err(e) = fuse_mt::mount(
         fuse_mt::FuseMT::new(mediafs, 1),
