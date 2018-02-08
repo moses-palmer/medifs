@@ -10,6 +10,9 @@ pub use self::path::Path;
 mod tag;
 pub use self::tag::Tag;
 
+mod time;
+pub use self::time::{TIME_FORMAT, Timestamp};
+
 #[cfg(test)]
 pub mod tests {
     use super::*;

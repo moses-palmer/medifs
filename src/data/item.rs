@@ -4,13 +4,8 @@ use std::path;
 
 use mime;
 use mime_guess;
-use time;
 
-use super::Tag;
-
-
-/// The time format used for item timestamps.
-const TIME_FORMAT: &str = "%Y-%m-%d %H:%M";
+use super::{Tag, TIME_FORMAT, Timestamp};
 
 
 /// A media item.
@@ -22,7 +17,7 @@ pub struct Item {
     pub path: path::PathBuf,
 
     /// The timestamp of generation.
-    pub timestamp: time::Tm,
+    pub timestamp: Timestamp,
 
     /// Tags applied to this item.
     pub tags: collections::HashSet<Tag>,
@@ -40,12 +35,13 @@ impl Item {
     /// *  `path` - The path of the source item.
     /// *  `timestamp` - The time stamp of generation.
     /// *  `tags` - Tag applied to this item.
-    pub fn new<P: Into<path::PathBuf>>(
+    pub fn new<P: Into<path::PathBuf>, T: Into<Timestamp>>(
         path: P,
-        timestamp: time::Tm,
+        timestamp: T,
         tags: collections::HashSet<Tag>,
-    ) -> Item {
+    ) -> Self {
         let path: path::PathBuf = path.into();
+        let timestamp: Timestamp = timestamp.into();
         let media_type = mime_guess::guess_mime_type(&path);
         Item {
             path,
@@ -97,7 +93,7 @@ impl fmt::Display for Item {
         write!(
             formatter,
             "{}",
-            self.timestamp.strftime(TIME_FORMAT).unwrap()
+            self.timestamp.as_ref().strftime(TIME_FORMAT).unwrap()
         )
     }
 }

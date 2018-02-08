@@ -35,7 +35,7 @@ impl Entry {
                     .map(|entry| entry.timestamp())
                     .unwrap_or(time::Timespec::new(0, 0))
             }
-            &Entry::Item(ref item) => item.timestamp.to_timespec(),
+            &Entry::Item(ref item) => item.timestamp.as_ref().to_timespec(),
         }
     }
 }
@@ -98,17 +98,15 @@ impl Cache {
         base: &P,
         item: data::Item,
     ) -> AddItemResult {
-        let year = item.timestamp.tm_year + 1900;
-        let month = item.timestamp.tm_mon + 1;
-        let day = item.timestamp.tm_mday;
         let base: &path::Path = base.as_ref();
-        let directory: path::PathBuf = [
-            base,
-            format!("{}", year).as_ref(),
-            format!("{:02}", month).as_ref(),
-            format!("{:02}", day).as_ref(),
-        ].iter()
-            .collect();
+        let directory: path::PathBuf =
+            [
+                base,
+                format!("{}", item.timestamp.year()).as_ref(),
+                format!("{:02}", item.timestamp.month()).as_ref(),
+                format!("{:02}", item.timestamp.day()).as_ref(),
+            ].iter()
+                .collect();
 
         if let Some(&mut data::Entry::Directory(ref mut tree)) =
             self.assert_exists(&directory)
@@ -245,14 +243,14 @@ mod tests {
             cache.add_item(&"/base", item1.clone()).unwrap(),
         );
         assert_eq!(
-            Some(item1.timestamp.to_timespec()),
+            Some(item1.timestamp.as_ref().to_timespec()),
             cache.lookup(&"/").map(|e| e.timestamp()),
         );
 
         let item2 = item("test2.jpg", 2000, 1, 2);
         cache.add_item(&"/base", item2.clone()).unwrap();
         assert_eq!(
-            Some(item2.timestamp.to_timespec()),
+            Some(item2.timestamp.as_ref().to_timespec()),
             cache.lookup(&"/").map(|e| e.timestamp()),
         );
     }
