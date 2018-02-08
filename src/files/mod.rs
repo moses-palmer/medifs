@@ -183,6 +183,7 @@ mod tests {
                     ("test3.jpg", data, 2000, 1, 2),
                 ].into_iter(),
             );
+
         let (_, ref directory1) = paths[0];
         assert_eq!(
             io::Error::from_raw_os_error(libc::ENOENT).kind(),
@@ -198,7 +199,12 @@ mod tests {
             2,
             fs::read_dir(directory1.parent().unwrap()).unwrap().count(),
         );
+
         let (_, ref directory2) = paths[2];
+        assert_eq!(
+            1,
+            fs::read_dir(directory2.parent().unwrap()).unwrap().count(),
+        );
     }
 
     /// Tests that reading from the FUSE file system yields the same data as
