@@ -103,7 +103,6 @@ impl fmt::Display for Item {
 mod tests {
     use std::path;
 
-    use super::super::tests::*;
     use super::*;
 
     /// Tests creation of item of unknown type.
@@ -111,7 +110,7 @@ mod tests {
     fn new_unknown() {
         let item = Item::new(
             path::Path::new("some file.ext"),
-            tm(2000, 01, 01, 12, 0, 0),
+            (2000, 01, 01, 12, 0, 0),
             collections::HashSet::new(),
         );
 
@@ -126,7 +125,7 @@ mod tests {
     fn new_jpeg() {
         let item = Item::new(
             path::Path::new("some file.jpg"),
-            tm(2000, 01, 01, 12, 0, 0),
+            (2000, 01, 01, 12, 0, 0),
             collections::HashSet::new(),
         );
 
@@ -141,7 +140,7 @@ mod tests {
     fn to_string() {
         let item = Item::new(
             path::Path::new("some file.ext"),
-            tm(2000, 01, 01, 12, 0, 0),
+            (2000, 01, 01, 12, 0, 0),
             collections::HashSet::new(),
         );
 
@@ -156,7 +155,7 @@ mod tests {
     fn name() {
         let item = Item::new(
             path::Path::new("some file.jpg"),
-            tm(2000, 01, 01, 12, 0, 0),
+            (2000, 01, 01, 12, 0, 0),
             collections::HashSet::new(),
         );
 
