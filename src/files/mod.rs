@@ -1,15 +1,16 @@
-use std::ffi;
 use std::fs;
 use std::io;
 use std::io::{Read, Seek};
 use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::path;
-use std::sync;
 
 use fuse_mt;
 use libc;
 
 use data;
+
+mod cache;
+pub use self::cache::Cache;
 
 mod traits;
 use self::traits::*;
@@ -20,74 +21,20 @@ mod macros;
 
 
 /// The actual FUSE implementation.
-pub struct MediaFS {
-    /// The file system cache.
-    cache: sync::RwLock<data::Cache>,
-
-    /// The root of the time stamped items.
-    timestamp_root: ffi::OsString,
+pub struct MediaFS<T: AsRef<Cache>> {
+    /// The backing file system cache.
+    cache: T,
 }
 
-
-impl MediaFS {
+impl<T: AsRef<Cache>> MediaFS<T> {
     /// Creates a new file system instance.
-    pub fn new(timestamp_root: ffi::OsString) -> Self {
-        let cache = sync::RwLock::new(data::Cache::new());
-        Self {
-            cache,
-            timestamp_root,
-        }
-    }
-
-    /// Adds an item to the file system.
-    ///
-    /// This method locks the cache and then adds the item.
-    ///
-    /// On success, the path of the new item is returned.
-    ///
-    /// This method will fail with `Err(item)` if the lock cannot be taken, or
-    /// if the item cannot be added.
-    ///
-    /// # Arguments
-    /// *  `item` - The item to add.
-    pub fn add(&self, item: data::Item) -> data::AddItemResult {
-        if let Ok(mut cache) = self.cache.write() {
-            cache.add_item(&self.timestamp_root, item)
-        } else {
-            Err(item)
-        }
-    }
-
-    /// Adds a sequence of items to the file system.
-    ///
-    /// This method locks the cache and then adds the items.
-    ///
-    /// This method will fail with `Err(None)` if the lock cannot be taken, or
-    /// with `Err(item)` for an item that cannot be added.
-    ///
-    /// # Arguments
-    /// *  `items` - The items to add.
-    pub fn add_iter<T: Iterator<Item = data::Item>>(
-        &self,
-        items: T,
-    ) -> Result<(), Option<data::Item>> {
-        if let Ok(mut cache) = self.cache.write() {
-            items.fold(Ok(()), |acc, item| {
-                acc.and_then(|_| {
-                    cache
-                        .add_item(&self.timestamp_root, item)
-                        .map(|_| ())
-                        .map_err(|item| Some(item))
-                })
-            })
-        } else {
-            Err(None)
-        }
+    pub fn new(cache: T) -> Self {
+        Self { cache }
     }
 }
 
 
-impl fuse_mt::FilesystemMT for MediaFS {
+impl<T: AsRef<Cache>> fuse_mt::FilesystemMT for MediaFS<T> {
     fn init(&self, _req: fuse_mt::RequestInfo) -> fuse_mt::ResultEmpty {
         Ok(())
     }
@@ -188,6 +135,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
 #[cfg(test)]
 mod tests {
     use std::os::unix::fs::PermissionsExt;
+    use std::sync;
 
     use fuse;
     use tempdir;
@@ -235,6 +183,7 @@ mod tests {
                     ("test3.jpg", data, 2000, 1, 2),
                 ].into_iter(),
             );
+
         let (_, ref directory1) = paths[0];
         assert_eq!(
             io::Error::from_raw_os_error(libc::ENOENT).kind(),
@@ -250,7 +199,12 @@ mod tests {
             2,
             fs::read_dir(directory1.parent().unwrap()).unwrap().count(),
         );
+
         let (_, ref directory2) = paths[2];
+        assert_eq!(
+            1,
+            fs::read_dir(directory2.parent().unwrap()).unwrap().count(),
+        );
     }
 
     /// Tests that reading from the FUSE file system yields the same data as
@@ -300,7 +254,8 @@ mod tests {
         // Create temporary directories and the file system handler
         let mount_point = tempdir::TempDir::new(&"medifs-mount").unwrap();
         let source_dir = tempdir::TempDir::new(&"medifs-source").unwrap();
-        let mediafs = MediaFS::new("timestamped".into());
+        let cache = sync::Arc::new(Cache::new("timestamped".into()));
+        let mediafs = MediaFS::new(cache.clone());
 
         // Add all items
         let source_and_target_paths = items
@@ -309,7 +264,7 @@ mod tests {
                 (
                     path.clone(),
                     mount_point.path().join(
-                        mediafs
+                        cache
                             .add(item_with_data(
                                 path,
                                 data.as_bytes(),
