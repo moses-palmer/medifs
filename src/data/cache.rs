@@ -169,6 +169,17 @@ impl Cache {
             },
         )
     }
+
+    /// Removes all items in this cache.
+    ///
+    /// # Panics
+    /// This method will panic if the root element is not a tree.
+    pub fn clear(&mut self) {
+        match self.0 {
+            Entry::Directory(ref mut tree) => tree.clear(),
+            _ => panic!("root element is unexpectedly not a tree"),
+        }
+    }
 }
 
 
@@ -255,4 +266,22 @@ mod tests {
         );
     }
 
+    /// Tests that clearing remove everything.
+    #[test]
+    fn test_clear() {
+        let mut cache = Cache::new();
+
+        let item = item("test.jpg", 2000, 1, 1);
+        let expected_path =
+            path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
+        assert_eq!(
+            expected_path,
+            cache.add_item(&"/base", item.clone()).unwrap(),
+        );
+        cache.clear();
+        assert_eq!(
+           None,
+            cache.lookup(&expected_path),
+        );
+    }
 }
