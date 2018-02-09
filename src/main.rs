@@ -15,6 +15,8 @@ use std::ffi;
 use std::process;
 use std::sync;
 
+use sources::WithSources;
+
 mod data;
 mod files;
 mod sources;
@@ -39,6 +41,7 @@ fn main() {
                 .short("o")
                 .takes_value(true),
         )
+        .with_sources()
         .get_matches();
 
     let mount_point = matches
