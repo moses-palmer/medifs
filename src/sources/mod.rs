@@ -4,6 +4,9 @@ use files;
 
 mod file_system;
 
+pub mod directory;
+pub use self::directory::DirectorySource;
+
 
 /// A source of media files.
 pub trait Source: Send + Sync {
@@ -37,7 +40,7 @@ pub trait WithSources<'a>: Sized {
     ///
     /// This is where to add new sources.
     fn with_sources(self) -> Self {
-        self
+        self.with_source::<DirectorySource>()
     }
 
     /// Applies a single source to this.
@@ -55,6 +58,11 @@ impl<'a> From<(files::Cache, clap::ArgMatches<'a>)> for Box<Source> {
     /// *  `matches` - Command line arguments.
     fn from((cache, args): (files::Cache, clap::ArgMatches<'a>)) -> Self {
         match args.subcommand() {
+            (DirectorySource::SUBCOMMAND_NAME, Some(ref app)) => {
+                DirectorySource::construct(cache, app)
+                    .map(|s| Box::new(s))
+                    .expect("failed to construct directory source")
+            }
             _ => panic!("no source specified"),
         }
     }
