@@ -69,4 +69,32 @@ impl Cache {
             Err(None)
         }
     }
+
+    /// Replaces all items in the file system.
+    ///
+    /// This method locks the cachei, clears it and then adds the items.
+    ///
+    /// This method will fail with `Err(None)` if the lock cannot be taken, or
+    /// with `Err(item)` for an item that cannot be added.
+    ///
+    /// # Arguments
+    /// *  `items` - The items to add.
+    pub fn replace_all<T: Iterator<Item = data::Item>>(
+        &self,
+        items: T,
+    ) -> Result<(), Option<data::Item>> {
+        if let Ok(mut cache) = self.cache.write() {
+            cache.clear();
+            items.fold(Ok(()), |acc, item| {
+                acc.and_then(|_| {
+                    cache
+                        .add_item(&self.timestamp_root, item)
+                        .map(|_| ())
+                        .map_err(|item| Some(item))
+                })
+            })
+        } else {
+            Err(None)
+        }
+    }
 }
