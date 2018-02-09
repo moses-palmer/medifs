@@ -2,6 +2,8 @@ use clap;
 
 use files;
 
+mod file_system;
+
 
 /// A source of media files.
 pub trait Source: Send + Sync {
