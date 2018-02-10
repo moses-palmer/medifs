@@ -14,6 +14,12 @@ pub trait Source: Send + Sync {
     ///
     /// This method should load all items from this source into the cache.
     fn start(&mut self);
+
+    /// Notifies this source that a file system access is being attempted.
+    ///
+    /// This method should check whether the underlying data store has been
+    /// updated, and in that case update the cache.
+    fn notify(&mut self);
 }
 
 

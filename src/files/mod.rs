@@ -261,6 +261,7 @@ mod tests {
 
     impl sources::Source for MockSource {
         fn start(&mut self) {}
+        fn notify(&mut self) {}
     }
 
     /// Mounts a file system on a temporary mount point.

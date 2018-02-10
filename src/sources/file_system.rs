@@ -76,6 +76,13 @@ where
     /// # Panics
     /// If an item fails to be added.
     fn start(&mut self) {
+        self.notify();
+    }
+
+    /// Reloads items from the file system if the root directory has been
+    /// modified since the last time it was reloaded.
+    fn notify(&mut self) {
+        // TODO: Check modification time
         self.populate();
     }
 }
