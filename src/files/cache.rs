@@ -1,5 +1,5 @@
 use std::ffi;
-use std::sync;
+use std::path;
 
 use data;
 
@@ -7,7 +7,7 @@ use data;
 /// A wrapper for the simple data cache.
 pub struct Cache {
     /// The file system cache.
-    pub cache: sync::RwLock<data::Cache>,
+    pub cache: data::Cache,
 
     /// The root of the time stamped items.
     timestamp_root: ffi::OsString,
@@ -17,11 +17,22 @@ pub struct Cache {
 impl Cache {
     /// Creates a new file cache.
     pub fn new(timestamp_root: ffi::OsString) -> Self {
-        let cache = sync::RwLock::new(data::Cache::new());
+        let cache = data::Cache::new();
         Self {
             cache,
             timestamp_root,
         }
+    }
+
+    /// Finds an entry by path.
+    ///
+    /// # Arguments
+    /// *  `path` - The path of the entry. This must be an absolute path.
+    pub fn lookup<P: AsRef<path::Path>>(
+        &self,
+        path: &P,
+    ) -> Option<&data::Entry> {
+        self.cache.lookup(path)
     }
 
     /// Adds an item to the file system.
@@ -35,12 +46,8 @@ impl Cache {
     ///
     /// # Arguments
     /// *  `item` - The item to add.
-    pub fn add(&self, item: data::Item) -> data::AddItemResult {
-        if let Ok(mut cache) = self.cache.write() {
-            cache.add_item(&self.timestamp_root, item)
-        } else {
-            Err(item)
-        }
+    pub fn add(&mut self, item: data::Item) -> data::AddItemResult {
+        self.cache.add_item(&self.timestamp_root, item)
     }
 
     /// Adds a sequence of items to the file system.
@@ -53,21 +60,17 @@ impl Cache {
     /// # Arguments
     /// *  `items` - The items to add.
     pub fn add_iter<T: Iterator<Item = data::Item>>(
-        &self,
+        &mut self,
         items: T,
     ) -> Result<(), Option<data::Item>> {
-        if let Ok(mut cache) = self.cache.write() {
-            items.fold(Ok(()), |acc, item| {
-                acc.and_then(|_| {
-                    cache
-                        .add_item(&self.timestamp_root, item)
-                        .map(|_| ())
-                        .map_err(|item| Some(item))
-                })
+        items.fold(Ok(()), |acc, item| {
+            acc.and_then(|_| {
+                self.cache
+                    .add_item(&self.timestamp_root, item)
+                    .map(|_| ())
+                    .map_err(|item| Some(item))
             })
-        } else {
-            Err(None)
-        }
+        })
     }
 
     /// Replaces all items in the file system.
@@ -80,21 +83,17 @@ impl Cache {
     /// # Arguments
     /// *  `items` - The items to add.
     pub fn replace_all<T: Iterator<Item = data::Item>>(
-        &self,
+        &mut self,
         items: T,
     ) -> Result<(), Option<data::Item>> {
-        if let Ok(mut cache) = self.cache.write() {
-            cache.clear();
-            items.fold(Ok(()), |acc, item| {
-                acc.and_then(|_| {
-                    cache
-                        .add_item(&self.timestamp_root, item)
-                        .map(|_| ())
-                        .map_err(|item| Some(item))
-                })
+        self.cache.clear();
+        items.fold(Ok(()), |acc, item| {
+            acc.and_then(|_| {
+                self.cache
+                    .add_item(&self.timestamp_root, item)
+                    .map(|_| ())
+                    .map_err(|item| Some(item))
             })
-        } else {
-            Err(None)
-        }
+        })
     }
 }

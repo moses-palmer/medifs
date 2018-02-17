@@ -54,7 +54,9 @@ fn main() {
             })
         })
         .unwrap_or(vec![]);
-    let cache = sync::Arc::new(files::Cache::new("All".into()));
+    let cache = files::Cache::new(
+        sync::RwLock::new(files::cache::Cache::new("All".into())),
+    );
     let mediafs = files::MediaFS::new(cache);
 
     if let Err(e) = fuse_mt::mount(
