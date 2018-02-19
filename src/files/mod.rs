@@ -8,8 +8,6 @@ use std::sync;
 use fuse_mt;
 use libc;
 
-use data;
-
 pub mod cache;
 
 mod traits;
@@ -60,7 +58,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
         _flags: u32,
     ) -> fuse_mt::ResultOpen {
         match lookup!(cache!(self.cache), &path) {
-            &data::Entry::Directory(_) => Ok((0, 0)),
+            &cache::Entry::Directory(_) => Ok((0, 0)),
             _ => Err(libc::ENOTDIR),
         }
     }
@@ -81,7 +79,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
         flags: u32,
     ) -> fuse_mt::ResultOpen {
         match lookup!(cache!(self.cache), &path) {
-            &data::Entry::Item(ref item) => {
+            &cache::Entry::Item(ref item) => {
                 fs::File::open(&item.path)
                     .map(|f| (f.into_raw_fd() as u64, flags))
                     .map_err(util::map_error)
