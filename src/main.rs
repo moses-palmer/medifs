@@ -62,7 +62,9 @@ fn main() {
     let cache = files::Cache::new(
         sync::RwLock::new(files::cache::Cache::new("All".into())),
     );
-    let mediafs = files::MediaFS::new(cache);
+    let source =
+        files::Source::new(sync::RwLock::new((cache.clone(), matches).into()));
+    let mediafs = files::MediaFS::new(cache.clone(), source.clone());
 
     if let Err(e) = fuse_mt::mount(
         fuse_mt::FuseMT::new(mediafs, 1),

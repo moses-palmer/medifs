@@ -4,7 +4,7 @@ use files;
 
 
 /// A source of media files.
-pub trait Source {
+pub trait Source: Send + Sync {
     /// Starts this source.
     ///
     /// This method should load all items from this source into the cache.
