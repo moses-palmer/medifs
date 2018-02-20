@@ -5,6 +5,7 @@ extern crate fuse_mt;
 extern crate libc;
 extern crate mime;
 extern crate mime_guess;
+extern crate rexiv2;
 extern crate time;
 extern crate walkdir;
 
