@@ -59,6 +59,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
         path: &path::Path,
         _fh: Option<u64>,
     ) -> fuse_mt::ResultEntry {
+        notify!(self.source);
         let result: fuse_mt::ResultEntry = lookup!(cache!(self.cache), &path)
             .into();
         result.map(|(ttl, fa)| (ttl, fa.for_user(req.uid, req.gid)))
@@ -70,6 +71,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
         path: &path::Path,
         _flags: u32,
     ) -> fuse_mt::ResultOpen {
+        notify!(self.source);
         match lookup!(cache!(self.cache), &path) {
             &cache::Entry::Directory(_) => Ok((0, 0)),
             _ => Err(libc::ENOTDIR),
@@ -82,6 +84,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
         path: &path::Path,
         _fh: u64,
     ) -> fuse_mt::ResultReaddir {
+        notify!(self.source);
         lookup!(cache!(self.cache), &path).into()
     }
 
@@ -91,6 +94,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
         path: &path::Path,
         flags: u32,
     ) -> fuse_mt::ResultOpen {
+        notify!(self.source);
         match lookup!(cache!(self.cache), &path) {
             &cache::Entry::Item(ref item) => {
                 fs::File::open(&item.path)
