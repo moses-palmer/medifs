@@ -1,6 +1,3 @@
-mod cache;
-pub use self::cache::{AddItemResult, Cache, Entry};
-
 mod item;
 pub use self::item::Item;
 

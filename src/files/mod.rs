@@ -3,14 +3,12 @@ use std::io;
 use std::io::{Read, Seek};
 use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::path;
+use std::sync;
 
 use fuse_mt;
 use libc;
 
-use data;
-
-mod cache;
-pub use self::cache::Cache;
+pub mod cache;
 
 mod traits;
 use self::traits::*;
@@ -19,22 +17,25 @@ mod util;
 #[macro_use]
 mod macros;
 
+/// The type used as cache.
+pub type Cache = sync::Arc<sync::RwLock<cache::Cache>>;
+
 
 /// The actual FUSE implementation.
-pub struct MediaFS<T: AsRef<Cache>> {
+pub struct MediaFS {
     /// The backing file system cache.
-    cache: T,
+    cache: Cache,
 }
 
-impl<T: AsRef<Cache>> MediaFS<T> {
+impl MediaFS {
     /// Creates a new file system instance.
-    pub fn new(cache: T) -> Self {
+    pub fn new(cache: Cache) -> MediaFS {
         Self { cache }
     }
 }
 
 
-impl<T: AsRef<Cache>> fuse_mt::FilesystemMT for MediaFS<T> {
+impl fuse_mt::FilesystemMT for MediaFS {
     fn init(&self, _req: fuse_mt::RequestInfo) -> fuse_mt::ResultEmpty {
         Ok(())
     }
@@ -57,7 +58,7 @@ impl<T: AsRef<Cache>> fuse_mt::FilesystemMT for MediaFS<T> {
         _flags: u32,
     ) -> fuse_mt::ResultOpen {
         match lookup!(cache!(self.cache), &path) {
-            &data::Entry::Directory(_) => Ok((0, 0)),
+            &cache::Entry::Directory(_) => Ok((0, 0)),
             _ => Err(libc::ENOTDIR),
         }
     }
@@ -78,7 +79,7 @@ impl<T: AsRef<Cache>> fuse_mt::FilesystemMT for MediaFS<T> {
         flags: u32,
     ) -> fuse_mt::ResultOpen {
         match lookup!(cache!(self.cache), &path) {
-            &data::Entry::Item(ref item) => {
+            &cache::Entry::Item(ref item) => {
                 fs::File::open(&item.path)
                     .map(|f| (f.into_raw_fd() as u64, flags))
                     .map_err(util::map_error)
@@ -254,7 +255,8 @@ mod tests {
         // Create temporary directories and the file system handler
         let mount_point = tempdir::TempDir::new(&"medifs-mount").unwrap();
         let source_dir = tempdir::TempDir::new(&"medifs-source").unwrap();
-        let cache = sync::Arc::new(Cache::new("timestamped".into()));
+        let cache =
+            Cache::new(sync::RwLock::new(cache::Cache::new("All".into())));
         let mediafs = MediaFS::new(cache.clone());
 
         // Add all items
@@ -265,6 +267,8 @@ mod tests {
                     path.clone(),
                     mount_point.path().join(
                         cache
+                            .write()
+                            .unwrap()
                             .add(item_with_data(
                                 path,
                                 data.as_bytes(),

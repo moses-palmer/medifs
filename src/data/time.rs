@@ -1,3 +1,4 @@
+use std;
 use time;
 
 
@@ -84,6 +85,41 @@ impl From<(i32, i32, i32, i32, i32, i32)> for Timestamp {
             tm_isdst: -1,
             tm_utcoff: 0,
         })
+    }
+}
+
+impl From<std::time::SystemTime> for Timestamp {
+    /// Converts a system time.
+    ///
+    /// # Arguments
+    /// *  `source` - The system time to convert.
+    fn from(source: std::time::SystemTime) -> Self {
+        // If the source is before the Unix epoch, we must manually invert it
+        let (sec, ns) = if let Ok(duration) = source.duration_since(
+            std::time::UNIX_EPOCH,
+        )
+        {
+            (duration.as_secs() as i64, duration.subsec_nanos() as i32)
+        } else {
+            let duration =
+                std::time::UNIX_EPOCH.duration_since(source).unwrap();
+            (
+                -(duration.as_secs() as i64),
+                -(duration.subsec_nanos() as i32),
+            )
+        };
+
+        time::Timespec::new(sec, ns).into()
+    }
+}
+
+impl From<time::Timespec> for Timestamp {
+    /// Converts a timestamp.
+    ///
+    /// # Arguments
+    /// *  `source` - The timestamp.
+    fn from(source: time::Timespec) -> Self {
+        Timestamp(time::at(source))
     }
 }
 

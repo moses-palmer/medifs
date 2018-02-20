@@ -4,7 +4,7 @@
 /// error.
 macro_rules! cache {
     ($cache:expr) => {
-        if let Ok(cache) = $cache.as_ref().cache.read() {
+        if let Ok(cache) = $cache.read() {
             cache
         } else {
             return Err(libc::EDEADLK);

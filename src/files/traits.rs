@@ -3,7 +3,7 @@ use libc;
 
 use time;
 
-use data;
+use files;
 use super::util;
 
 
@@ -18,12 +18,12 @@ pub trait ForUser {
 }
 
 
-impl<'a> From<&'a data::Entry> for fuse_mt::ResultEntry {
-    fn from(source: &'a data::Entry) -> fuse_mt::ResultEntry {
+impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultEntry {
+    fn from(source: &'a files::cache::Entry) -> fuse_mt::ResultEntry {
         let ttl = time::Timespec::new(0x7FFFFFFF, 0);
         let timestamp = source.timestamp();
         match source {
-            &data::Entry::Directory(_) => {
+            &files::cache::Entry::Directory(_) => {
                 Ok((
                     ttl,
                     fuse_mt::FileAttr {
@@ -43,7 +43,7 @@ impl<'a> From<&'a data::Entry> for fuse_mt::ResultEntry {
                     },
                 ))
             }
-            &data::Entry::Item(ref item) => {
+            &files::cache::Entry::Item(ref item) => {
                 item.path
                     .metadata()
                     .map(|meta| {
@@ -80,20 +80,20 @@ impl ForUser for fuse_mt::FileAttr {
 }
 
 
-impl<'a> From<&'a data::Entry> for fuse_mt::ResultReaddir {
-    fn from(source: &'a data::Entry) -> fuse_mt::ResultReaddir {
+impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultReaddir {
+    fn from(source: &'a files::cache::Entry) -> fuse_mt::ResultReaddir {
         match source {
-            &data::Entry::Directory(ref tree) => {
+            &files::cache::Entry::Directory(ref tree) => {
                 Ok(
                     tree.iter()
                         .map(|(name, entry)| {
                             fuse_mt::DirectoryEntry {
                                 name: name.to_os_string(),
                                 kind: match entry {
-                                    &data::Entry::Directory(_) => {
+                                    &files::cache::Entry::Directory(_) => {
                                         fuse_mt::FileType::Directory
                                     }
-                                    &data::Entry::Item(_) => {
+                                    &files::cache::Entry::Item(_) => {
                                         fuse_mt::FileType::RegularFile
                                     }
                                 },
