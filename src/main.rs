@@ -6,6 +6,7 @@ extern crate libc;
 extern crate mime;
 extern crate mime_guess;
 extern crate time;
+extern crate walkdir;
 
 #[cfg(test)]
 extern crate tempdir;
@@ -14,8 +15,11 @@ use std::ffi;
 use std::process;
 use std::sync;
 
+use sources::WithSources;
+
 mod data;
 mod files;
+mod sources;
 mod types;
 
 
@@ -37,6 +41,7 @@ fn main() {
                 .short("o")
                 .takes_value(true),
         )
+        .with_sources()
         .get_matches();
 
     let mount_point = matches
@@ -57,7 +62,9 @@ fn main() {
     let cache = files::Cache::new(
         sync::RwLock::new(files::cache::Cache::new("All".into())),
     );
-    let mediafs = files::MediaFS::new(cache);
+    let source =
+        files::Source::new(sync::RwLock::new((cache.clone(), matches).into()));
+    let mediafs = files::MediaFS::new(cache.clone(), source.clone());
 
     if let Err(e) = fuse_mt::mount(
         fuse_mt::FuseMT::new(mediafs, 1),

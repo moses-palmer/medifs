@@ -8,6 +8,8 @@ use std::sync;
 use fuse_mt;
 use libc;
 
+use sources;
+
 pub mod cache;
 
 mod traits;
@@ -21,16 +23,27 @@ mod macros;
 pub type Cache = sync::Arc<sync::RwLock<cache::Cache>>;
 
 
+/// The type used as source.
+pub type Source = sync::Arc<sync::RwLock<Box<sources::Source>>>;
+
+
 /// The actual FUSE implementation.
 pub struct MediaFS {
     /// The backing file system cache.
     cache: Cache,
+
+    /// The source providing actual items.
+    source: Source,
 }
 
 impl MediaFS {
     /// Creates a new file system instance.
-    pub fn new(cache: Cache) -> MediaFS {
-        Self { cache }
+    ///
+    /// # Panics
+    /// This method påanics if the write lock on `source` cannot be taken.
+    pub fn new(cache: Cache, source: Source) -> MediaFS {
+        source.write().unwrap().start();
+        Self { cache, source }
     }
 }
 
@@ -243,6 +256,13 @@ mod tests {
                             fuse::BackgroundSession<'a>,
                             Vec<(path::PathBuf, path::PathBuf)>);
 
+    /// A mock source providing fixed data.
+    struct MockSource {}
+
+    impl sources::Source for MockSource {
+        fn start(&mut self) {}
+    }
+
     /// Mounts a file system on a temporary mount point.
     ///
     /// The mount point and a temporary directory is returned along with a
@@ -257,7 +277,8 @@ mod tests {
         let source_dir = tempdir::TempDir::new(&"medifs-source").unwrap();
         let cache =
             Cache::new(sync::RwLock::new(cache::Cache::new("All".into())));
-        let mediafs = MediaFS::new(cache.clone());
+        let source = Source::new(sync::RwLock::new(Box::new(MockSource {})));
+        let mediafs = MediaFS::new(cache.clone(), source.clone());
 
         // Add all items
         let source_and_target_paths = items
