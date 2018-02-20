@@ -19,7 +19,7 @@ pub struct DirectorySource {
     /// The cache.
     cache: files::Cache,
 
-    // The timestamp of last refresh.
+    /// The timestamp of last refresh.
     timestamp: Option<std::time::SystemTime>,
 }
 
