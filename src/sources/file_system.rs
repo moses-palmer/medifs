@@ -1,3 +1,4 @@
+use std;
 use std::path;
 
 use clap;
@@ -59,6 +60,11 @@ pub trait FileSystemSource: super::Source {
     /// The cache.
     fn cache(&self) -> &files::Cache;
 
+    /// The timestamp of the last refresh.
+    ///
+    /// The timestamp is taken from the root directory.
+    fn timestamp(&mut self) -> &mut Option<std::time::SystemTime>;
+
     /// The directory root from which to load items.
     fn root(&self) -> &path::PathBuf;
 }
@@ -76,6 +82,20 @@ where
     /// # Panics
     /// If an item fails to be added.
     fn start(&mut self) {
-        self.populate();
+        self.notify();
+    }
+
+    /// Reloads items from the file system if the root directory has been
+    /// modified since the last time it was reloaded.
+    fn notify(&mut self) {
+        if let Ok(timestamp) = self.root().metadata().and_then(
+            |m| m.modified(),
+        )
+        {
+            if self.timestamp().map(|t| t < timestamp).unwrap_or(true) {
+                self.populate();
+                *self.timestamp() = Some(timestamp)
+            }
+        }
     }
 }

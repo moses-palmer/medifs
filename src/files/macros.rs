@@ -26,3 +26,18 @@ macro_rules! lookup {
         }
     }
 }
+
+
+/// Acquires a write lock on a source and sends a notification.
+///
+/// If locking fails, this macro will cause the current method to return an
+/// error.
+macro_rules! notify {
+    ($source:expr) => {
+        if let Ok(ref mut source) = $source.write() {
+            source.notify();
+        } else {
+            return Err(libc::EDEADLK);
+        }
+    }
+}
