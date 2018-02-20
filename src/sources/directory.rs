@@ -18,6 +18,9 @@ pub struct DirectorySource {
 
     /// The cache.
     cache: files::Cache,
+
+    // The timestamp of last refresh.
+    timestamp: Option<std::time::SystemTime>,
 }
 
 
@@ -55,6 +58,14 @@ impl FileSystemSource for DirectorySource {
         &self.cache
     }
 
+    /// The timestamp of the last refresh.
+    ///
+    /// The timestamp is taken from the root directory modification time.
+    #[inline(always)]
+    fn timestamp(&mut self) -> &mut Option<std::time::SystemTime> {
+        &mut self.timestamp
+    }
+
     /// The directory root from which to load items.
     #[inline(always)]
     fn root(&self) -> &path::PathBuf {
@@ -77,6 +88,7 @@ impl ConfigurableSource for DirectorySource {
         Ok(DirectorySource {
             cache,
             root: args.value_of(OPT_ROOT).map(|v| v.into()).unwrap(),
+            timestamp: None,
         })
     }
 }
