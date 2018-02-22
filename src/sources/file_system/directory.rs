@@ -8,7 +8,7 @@ use time;
 use data;
 use files;
 
-use super::{FileSystemSource, OPT_ROOT, options};
+use super::*;
 use sources::ConfigurableSource;
 
 
@@ -25,6 +25,31 @@ pub struct DirectorySource {
 
 
 impl FileSystemSource for DirectorySource {
+    /// The cache.
+    ///
+    /// This value will not be available until this source has been started.
+    #[inline(always)]
+    fn cache(&self) -> &files::Cache {
+        &self.cache
+    }
+
+    /// The timestamp of the last refresh.
+    ///
+    /// The timestamp is taken from the root directory modification time.
+    #[inline(always)]
+    fn timestamp(&mut self) -> &mut Option<std::time::SystemTime> {
+        &mut self.timestamp
+    }
+
+    /// The directory root from which to load items.
+    #[inline(always)]
+    fn root(&self) -> &path::PathBuf {
+        &self.root
+    }
+}
+
+
+impl FileSystemItemGenerator for DirectorySource {
     /// Generates an item from a path.
     ///
     /// # Arguments
@@ -48,28 +73,6 @@ impl FileSystemSource for DirectorySource {
             ),
             collections::HashSet::new(),
         )
-    }
-
-    /// The cache.
-    ///
-    /// This value will not be available until this source has been started.
-    #[inline(always)]
-    fn cache(&self) -> &files::Cache {
-        &self.cache
-    }
-
-    /// The timestamp of the last refresh.
-    ///
-    /// The timestamp is taken from the root directory modification time.
-    #[inline(always)]
-    fn timestamp(&mut self) -> &mut Option<std::time::SystemTime> {
-        &mut self.timestamp
-    }
-
-    /// The directory root from which to load items.
-    #[inline(always)]
-    fn root(&self) -> &path::PathBuf {
-        &self.root
     }
 }
 
