@@ -22,8 +22,7 @@ impl FileSystemItemGenerator for DirectorySource {
     ///
     /// # Arguments
     /// *  `path` - The path for which to generate an item.
-    fn item<P: AsRef<path::Path>>(&self, path: P) -> data::Item {
-        let path: &path::Path = path.as_ref();
+    fn item(&self, path: &path::Path) -> data::Item {
         data::Item::new(
             path,
             time::at(

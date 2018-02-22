@@ -40,7 +40,7 @@ pub trait FileSystemItemGenerator {
     ///
     /// # Arguments
     /// *  `path` - The path for which to generate an item.
-    fn item<P: AsRef<path::Path>>(&self, path: P) -> data::Item;
+    fn item(&self, path: &path::Path) -> data::Item;
 }
 
 
