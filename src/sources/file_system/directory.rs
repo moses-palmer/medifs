@@ -9,7 +9,7 @@ use data;
 use files;
 
 use super::*;
-use sources::ConfigurableSource;
+use sources::*;
 
 
 pub struct DirectorySource {
@@ -83,14 +83,18 @@ impl ConfigurableSource for DirectorySource {
     fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
         options(app)
     }
+}
 
+
+impl ConstructableSource for DirectorySource {
     fn construct<'a>(
         cache: files::Cache,
         args: &clap::ArgMatches<'a>,
     ) -> Result<Self, String> {
+        let root = args.value_of(OPT_ROOT).map(|v| v.into()).unwrap();
         Ok(DirectorySource {
             cache,
-            root: args.value_of(OPT_ROOT).map(|v| v.into()).unwrap(),
+            root,
             timestamp: None,
         })
     }
