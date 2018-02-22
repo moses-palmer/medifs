@@ -8,8 +8,8 @@ use time;
 use data;
 use files;
 
-use super::ConfigurableSource;
-use super::file_system::{FileSystemSource, OPT_ROOT, options};
+use super::{FileSystemSource, OPT_ROOT, options};
+use sources::ConfigurableSource;
 
 
 pub struct DirectorySource {

@@ -3,9 +3,7 @@ use clap;
 use files;
 
 mod file_system;
-
-pub mod directory;
-pub use self::directory::DirectorySource;
+pub use self::file_system::*;
 
 
 /// A source of media files.

@@ -8,6 +8,9 @@ use walkdir;
 use data;
 use files;
 
+mod directory;
+pub use self::directory::*;
+
 
 /// The name of the argument specifying the root.
 pub const OPT_ROOT: &'static str = &"ROOT";
