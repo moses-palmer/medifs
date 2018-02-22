@@ -8,6 +8,9 @@ use walkdir;
 use data;
 use files;
 
+#[macro_use]
+mod macros;
+
 mod directory;
 pub use self::directory::*;
 

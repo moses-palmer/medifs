@@ -12,41 +12,9 @@ use super::*;
 use sources::*;
 
 
-pub struct DirectorySource {
-    /// The root directory.
-    root: path::PathBuf,
-
-    /// The cache.
-    cache: files::Cache,
-
-    /// The timestamp of last refresh.
-    timestamp: Option<std::time::SystemTime>,
-}
-
-
-impl FileSystemSource for DirectorySource {
-    /// The cache.
-    ///
-    /// This value will not be available until this source has been started.
-    #[inline(always)]
-    fn cache(&self) -> &files::Cache {
-        &self.cache
-    }
-
-    /// The timestamp of the last refresh.
-    ///
-    /// The timestamp is taken from the root directory modification time.
-    #[inline(always)]
-    fn timestamp(&mut self) -> &mut Option<std::time::SystemTime> {
-        &mut self.timestamp
-    }
-
-    /// The directory root from which to load items.
-    #[inline(always)]
-    fn root(&self) -> &path::PathBuf {
-        &self.root
-    }
-}
+file_system_base!(
+    DirectorySource,
+);
 
 
 impl FileSystemItemGenerator for DirectorySource {
