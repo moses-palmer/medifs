@@ -13,14 +13,14 @@ pub use self::directory::*;
 
 
 /// The name of the argument specifying the root.
-pub const OPT_ROOT: &'static str = &"ROOT";
+const OPT_ROOT: &'static str = &"ROOT";
 
 
 /// Adds the base options for a file system source.
 ///
 /// # Arguments
 /// *  `app` - The application to which to add the arguments.
-pub fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
+fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
     app.arg(
         clap::Arg::with_name(OPT_ROOT)
             .help("The source directory.")
