@@ -3,9 +3,7 @@ use clap;
 use files;
 
 mod file_system;
-
-pub mod directory;
-pub use self::directory::DirectorySource;
+pub use self::file_system::*;
 
 
 /// A source of media files.
@@ -31,7 +29,10 @@ pub trait ConfigurableSource: Source + Sized {
     /// Generates a description of the command line argument group used to
     /// configure this source.
     fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a>;
+}
 
+/// A source that can be constructed from command line arguments.
+pub trait ConstructableSource: ConfigurableSource {
     /// Constructs a source from command line arguments.
     fn construct<'a>(
         cache: files::Cache,

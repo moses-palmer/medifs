@@ -8,16 +8,22 @@ use walkdir;
 use data;
 use files;
 
+#[macro_use]
+mod macros;
+
+mod directory;
+pub use self::directory::*;
+
 
 /// The name of the argument specifying the root.
-pub const OPT_ROOT: &'static str = &"ROOT";
+const OPT_ROOT: &'static str = &"ROOT";
 
 
 /// Adds the base options for a file system source.
 ///
 /// # Arguments
 /// *  `app` - The application to which to add the arguments.
-pub fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
+fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
     app.arg(
         clap::Arg::with_name(OPT_ROOT)
             .help("The source directory.")
@@ -26,7 +32,19 @@ pub fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
 }
 
 
-pub trait FileSystemSource: super::Source {
+/// Generates an item from a path.
+///
+/// This trait must be implemented by file system sources.
+pub trait FileSystemItemGenerator {
+    /// Generates an item from a path.
+    ///
+    /// # Arguments
+    /// *  `path` - The path for which to generate an item.
+    fn item(&self, path: &path::Path) -> data::Item;
+}
+
+
+pub trait FileSystemSource: super::Source + FileSystemItemGenerator {
     /// Populates the cache with items from this source.
     ///
     /// This method will completely replace the items.
@@ -50,12 +68,6 @@ pub trait FileSystemSource: super::Source {
                 .unwrap();
         }
     }
-
-    /// Generates an item from a path.
-    ///
-    /// # Arguments
-    /// *  `path` - The path for which to generate an item.
-    fn item<P: AsRef<path::Path>>(&self, path: P) -> data::Item;
 
     /// The cache.
     fn cache(&self) -> &files::Cache;

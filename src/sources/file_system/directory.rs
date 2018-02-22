@@ -8,29 +8,21 @@ use time;
 use data;
 use files;
 
-use super::ConfigurableSource;
-use super::file_system::{FileSystemSource, OPT_ROOT, options};
+use super::*;
+use sources::*;
 
 
-pub struct DirectorySource {
-    /// The root directory.
-    root: path::PathBuf,
-
-    /// The cache.
-    cache: files::Cache,
-
-    // The timestamp of last refresh.
-    timestamp: Option<std::time::SystemTime>,
-}
+file_system_base!(
+    DirectorySource,
+);
 
 
-impl FileSystemSource for DirectorySource {
+impl FileSystemItemGenerator for DirectorySource {
     /// Generates an item from a path.
     ///
     /// # Arguments
     /// *  `path` - The path for which to generate an item.
-    fn item<P: AsRef<path::Path>>(&self, path: P) -> data::Item {
-        let path: &path::Path = path.as_ref();
+    fn item(&self, path: &path::Path) -> data::Item {
         data::Item::new(
             path,
             time::at(
@@ -49,28 +41,6 @@ impl FileSystemSource for DirectorySource {
             collections::HashSet::new(),
         )
     }
-
-    /// The cache.
-    ///
-    /// This value will not be available until this source has been started.
-    #[inline(always)]
-    fn cache(&self) -> &files::Cache {
-        &self.cache
-    }
-
-    /// The timestamp of the last refresh.
-    ///
-    /// The timestamp is taken from the root directory modification time.
-    #[inline(always)]
-    fn timestamp(&mut self) -> &mut Option<std::time::SystemTime> {
-        &mut self.timestamp
-    }
-
-    /// The directory root from which to load items.
-    #[inline(always)]
-    fn root(&self) -> &path::PathBuf {
-        &self.root
-    }
 }
 
 
@@ -80,14 +50,18 @@ impl ConfigurableSource for DirectorySource {
     fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
         options(app)
     }
+}
 
+
+impl ConstructableSource for DirectorySource {
     fn construct<'a>(
         cache: files::Cache,
         args: &clap::ArgMatches<'a>,
     ) -> Result<Self, String> {
+        let root = args.value_of(OPT_ROOT).map(|v| v.into()).unwrap();
         Ok(DirectorySource {
             cache,
-            root: args.value_of(OPT_ROOT).map(|v| v.into()).unwrap(),
+            root,
             timestamp: None,
         })
     }
