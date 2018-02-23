@@ -48,6 +48,7 @@ pub trait WithSources<'a>: Sized {
     /// This is where to add new sources.
     fn with_sources(self) -> Self {
         self.with_source::<DirectorySource>()
+            .with_source::<TagsSource>()
     }
 
     /// Applies a single source to this.
@@ -69,6 +70,11 @@ impl<'a> From<(files::Cache, clap::ArgMatches<'a>)> for Box<Source> {
                 DirectorySource::construct(cache, app)
                     .map(|s| Box::new(s))
                     .expect("failed to construct directory source")
+            }
+            (TagsSource::SUBCOMMAND_NAME, Some(ref app)) => {
+                TagsSource::construct(cache, app)
+                    .map(|s| Box::new(s))
+                    .expect("failed to construct tags source")
             }
             _ => panic!("no source specified"),
         }

@@ -1,4 +1,5 @@
 use std;
+use std::collections;
 use std::path;
 
 use clap;
@@ -13,6 +14,9 @@ mod macros;
 
 mod directory;
 pub use self::directory::*;
+
+mod tags;
+pub use self::tags::*;
 
 
 /// The name of the argument specifying the root.
@@ -109,5 +113,23 @@ where
                 *self.timestamp() = Some(timestamp)
             }
         }
+    }
+}
+
+
+impl<P: AsRef<path::Path>> From<P> for data::Item {
+    /// Converts as path to an item by simply reading the modification time.
+    ///
+    /// If the modification time cannot be read, the current time is used.
+    ///
+    /// # Arguments
+    /// *  `source` - The source path.
+    fn from(source: P) -> Self {
+        let path: &path::Path = source.as_ref();
+        data::Item::new(
+            path,
+            data::timestamp(&path),
+            collections::HashSet::new(),
+        )
     }
 }

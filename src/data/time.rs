@@ -1,9 +1,46 @@
 use std;
+use std::path;
+
 use time;
 
 
 /// The time format used for item timestamps.
 pub const TIME_FORMAT: &str = "%Y-%m-%d %H:%M";
+
+
+/// Extracts the modified timestamp from a file.
+///
+/// If no meta data can be extracted, the current time is returned.
+///
+/// # Arguments
+/// *  `path` - The path of the file.
+pub fn timestamp<P: AsRef<path::Path>>(path: &P) -> std::time::SystemTime {
+    let path: &path::Path = path.as_ref();
+    path.metadata().and_then(|meta| meta.modified()).unwrap_or(
+        std::time::SystemTime::now(),
+    )
+}
+
+
+/// Converts a system time to a time spec.
+///
+/// # Arguments
+/// *  `st` - The system time to convert.
+pub fn system_time_to_timespec(st: std::time::SystemTime) -> time::Timespec {
+    // If the source is before the Unix epoch, we must manually invert it
+    let (sec, ns) =
+        if let Ok(duration) = st.duration_since(std::time::UNIX_EPOCH) {
+            (duration.as_secs() as i64, duration.subsec_nanos() as i32)
+        } else {
+            let duration = std::time::UNIX_EPOCH.duration_since(st).unwrap();
+            (
+                -(duration.as_secs() as i64),
+                -(duration.subsec_nanos() as i32),
+            )
+        };
+
+    time::Timespec::new(sec, ns).into()
+}
 
 
 /// A wrapped timestamp.
@@ -94,22 +131,7 @@ impl From<std::time::SystemTime> for Timestamp {
     /// # Arguments
     /// *  `source` - The system time to convert.
     fn from(source: std::time::SystemTime) -> Self {
-        // If the source is before the Unix epoch, we must manually invert it
-        let (sec, ns) = if let Ok(duration) = source.duration_since(
-            std::time::UNIX_EPOCH,
-        )
-        {
-            (duration.as_secs() as i64, duration.subsec_nanos() as i32)
-        } else {
-            let duration =
-                std::time::UNIX_EPOCH.duration_since(source).unwrap();
-            (
-                -(duration.as_secs() as i64),
-                -(duration.subsec_nanos() as i32),
-            )
-        };
-
-        time::Timespec::new(sec, ns).into()
+        system_time_to_timespec(source).into()
     }
 }
 
