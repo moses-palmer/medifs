@@ -102,12 +102,10 @@ impl Cache {
 
     /// Adds an item to the file system.
     ///
-    /// This method locks the cache and then adds the item.
-    ///
     /// On success, the path of the new item is returned.
     ///
-    /// This method will fail with `Err(item)` if the lock cannot be taken, or
-    /// if the item cannot be added.
+    /// This method will fail if an item named after the generated parent
+    /// directory for `item` exists and is not a directory.
     ///
     /// # Arguments
     /// *  `item` - The item to add.
@@ -143,10 +141,8 @@ impl Cache {
 
     /// Adds a sequence of items to the file system.
     ///
-    /// This method locks the cache and then adds the items.
-    ///
-    /// This method will fail with `Err(None)` if the lock cannot be taken, or
-    /// with `Err(item)` for an item that cannot be added.
+    /// This method will fail if an item named after the generated parent
+    /// directory for any item exists and is not a directory.
     ///
     /// # Arguments
     /// *  `items` - The items to add.
