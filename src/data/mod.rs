@@ -8,7 +8,8 @@ mod tag;
 pub use self::tag::Tag;
 
 mod time;
-pub use self::time::{TIME_FORMAT, Timestamp};
+pub use self::time::{TIME_FORMAT, Timestamp, timestamp,
+                     system_time_to_timespec};
 
 #[cfg(test)]
 pub mod tests {
