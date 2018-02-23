@@ -69,7 +69,6 @@ impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultEntry {
                     .map_err(util::map_error)
             }
         }
-
     }
 }
 
@@ -104,6 +103,5 @@ impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultReaddir {
             }
             _ => Err(libc::ENOTDIR),
         }
-
     }
 }
