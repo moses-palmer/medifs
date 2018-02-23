@@ -15,6 +15,9 @@ mod macros;
 mod directory;
 pub use self::directory::*;
 
+mod tags;
+pub use self::tags::*;
+
 
 /// The name of the argument specifying the root.
 const OPT_ROOT: &'static str = &"ROOT";
