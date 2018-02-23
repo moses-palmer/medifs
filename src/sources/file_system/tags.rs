@@ -22,6 +22,13 @@ file_system_base!(
 );
 
 
+/// The exiv2 tag designated for creation time.
+const EXIT_TIMESTAMP_TAG_NAME: &str = &"Exif.Photo.DateTimeOriginal";
+
+/// The format used for the creation time.
+const EXIT_TIMESTAMP_TAG_FORMAT: &str = &"%Y:%m:%d %H:%M:%S";
+
+
 /// Information about a file.
 enum ItemMeta {
     /// The file does not contain any metadata.
@@ -47,14 +54,22 @@ impl ItemMeta {
 
     /// Converts a path to a timestamp.
     ///
+    /// This function first attempts to read the EXIF tag, and then falls back
+    /// on the file modification timestamp.
+    ///
     /// # Arguments
     /// *  `path` - The source path.
     /// *  `meta` - Image metadata.
     fn timestamp<P: AsRef<path::Path>>(
-        _path: &P,
-        _meta: &rexiv2::Metadata,
+        path: &P,
+        meta: &rexiv2::Metadata,
     ) -> time::Tm {
-        unimplemented!();
+        meta.get_tag_string(EXIT_TIMESTAMP_TAG_NAME)
+            .ok()
+            .and_then(|s| time::strptime(&s, EXIT_TIMESTAMP_TAG_FORMAT).ok())
+            .unwrap_or_else(|| {
+                time::at(data::system_time_to_timespec(data::timestamp(path)))
+            })
     }
 
     /// Converts a path to a tag collection.
