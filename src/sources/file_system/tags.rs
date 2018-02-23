@@ -28,6 +28,9 @@ const EXIT_TIMESTAMP_TAG_NAME: &str = &"Exif.Photo.DateTimeOriginal";
 /// The format used for the creation time.
 const EXIT_TIMESTAMP_TAG_FORMAT: &str = &"%Y:%m:%d %H:%M:%S";
 
+/// The exiv2 tag designated for keywords.
+const IPTC_KEYWORDS_TAG_NAME: &str = &"Iptc.Application2.Keywords";
+
 
 /// Information about a file.
 enum ItemMeta {
@@ -74,11 +77,20 @@ impl ItemMeta {
 
     /// Converts a path to a tag collection.
     ///
+    /// This function first attempts to read to IPTC keywords, and then falls
+    /// back on an empty set.
+    ///
     /// # Arguments
     /// *  `path` - The source path.
     /// *  `meta` - Image metadata.
-    fn tags(_meta: &rexiv2::Metadata) -> collections::HashSet<data::Tag> {
-        unimplemented!();
+    fn tags(meta: &rexiv2::Metadata) -> collections::HashSet<data::Tag> {
+        meta.get_tag_multiple_strings(IPTC_KEYWORDS_TAG_NAME)
+            .map(|tags| {
+                tags.iter()
+                    .map(|s| s.parse().unwrap_or_else(|_| data::Tag::new(s)))
+                    .collect()
+            })
+            .unwrap_or_else(|_| collections::HashSet::new())
     }
 }
 
