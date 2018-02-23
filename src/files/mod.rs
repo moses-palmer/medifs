@@ -280,8 +280,9 @@ mod tests {
         // Create temporary directories and the file system handler
         let mount_point = tempdir::TempDir::new(&"medifs-mount").unwrap();
         let source_dir = tempdir::TempDir::new(&"medifs-source").unwrap();
-        let cache =
-            Cache::new(sync::RwLock::new(cache::Cache::new("All".into())));
+        let cache = Cache::new(sync::RwLock::new(
+            cache::Cache::new("All".into(), "Tagged".into()),
+        ));
         let source = Source::new(sync::RwLock::new(Box::new(MockSource {})));
         let mediafs = MediaFS::new(cache.clone(), source.clone());
 

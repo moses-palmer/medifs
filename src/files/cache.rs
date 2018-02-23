@@ -78,16 +78,23 @@ pub struct Cache {
 
     /// The root of the time stamped items.
     timestamp_root: ffi::OsString,
+
+    /// The root of the tagged items.
+    tagged_root: ffi::OsString,
 }
 
 
 impl Cache {
     /// Creates a new file cache.
-    pub fn new(timestamp_root: ffi::OsString) -> Self {
+    pub fn new(
+        timestamp_root: ffi::OsString,
+        tagged_root: ffi::OsString,
+    ) -> Self {
         let root = Entry::Directory(Tree::new());
         Self {
             root,
             timestamp_root,
+            tagged_root,
         }
     }
 
@@ -293,7 +300,7 @@ mod tests {
     #[test]
     fn test_lookup_root() {
         let valid: path::PathBuf = ["/"].iter().collect();
-        let cache = Cache::new("/base".into());
+        let cache = Cache::new("/base".into(), "tagged".into());
 
         assert!(cache.lookup(&valid).is_some());
     }
@@ -301,7 +308,7 @@ mod tests {
     /// Tests that adding an item immediately under the root works.
     #[test]
     fn test_add_item_simple() {
-        let mut cache = Cache::new("/base".into());
+        let mut cache = Cache::new("/base".into(), "tagged".into());
 
         let item = item("test.jpg", 2000, 1, 1);
         let expected_path =
@@ -322,7 +329,7 @@ mod tests {
     /// Tests that adding an item over a directory works.
     #[test]
     fn test_add_item_twice() {
-        let mut cache = Cache::new("/base".into());
+        let mut cache = Cache::new("/base".into(), "tagged".into());
 
         let item1 = item("test1.jpg", 2000, 1, 1);
         let expected_path1 =
@@ -354,7 +361,7 @@ mod tests {
     /// Tests that timestamps are correct.
     #[test]
     fn test_timestamp() {
-        let mut cache = Cache::new("/base".into());
+        let mut cache = Cache::new("/base".into(), "tagged".into());
 
         let item1 = item("test1.jpg", 2000, 1, 1);
         let expected_path1 =
@@ -384,7 +391,7 @@ mod tests {
     /// Tests that clearing removes everything.
     #[test]
     fn test_clear() {
-        let mut cache = Cache::new("/base".into());
+        let mut cache = Cache::new("/base".into(), "tagged".into());
 
         let item = item("test.jpg", 2000, 1, 1);
         let expected_path =

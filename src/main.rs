@@ -60,9 +60,9 @@ fn main() {
             })
         })
         .unwrap_or(vec![]);
-    let cache = files::Cache::new(
-        sync::RwLock::new(files::cache::Cache::new("All".into())),
-    );
+    let cache = files::Cache::new(sync::RwLock::new(
+        files::cache::Cache::new("All".into(), "Tagged".into()),
+    ));
     let source =
         files::Source::new(sync::RwLock::new((cache.clone(), matches).into()));
     let mediafs = files::MediaFS::new(cache.clone(), source.clone());
