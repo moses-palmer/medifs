@@ -277,3 +277,124 @@ impl Cache {
         )
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use data::tests::*;
+    use super::*;
+
+    /// Tests that looking up an empty path yields the root.
+    #[test]
+    fn test_lookup_root() {
+        let valid: path::PathBuf = ["/"].iter().collect();
+        let cache = Cache::new("/base".into());
+
+        assert!(cache.lookup(&valid).is_some());
+    }
+
+    /// Tests that adding an item immediately under the root works.
+    #[test]
+    fn test_add_item_simple() {
+        let mut cache = Cache::new("/base".into());
+
+        let item = item("test.jpg", 2000, 1, 1);
+        let expected_path =
+            path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
+        assert_eq!(
+            expected_path,
+            cache.add_item(
+                expected_path.parent().unwrap(),
+                item.clone(),
+            ).unwrap(),
+        );
+        assert_eq!(
+            Some(&Entry::Item(item)),
+            cache.lookup(&expected_path),
+        );
+    }
+
+    /// Tests that adding an item over a directory works.
+    #[test]
+    fn test_add_item_twice() {
+        let mut cache = Cache::new("/base".into());
+
+        let item1 = item("test1.jpg", 2000, 1, 1);
+        let expected_path1 =
+            path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
+        assert_eq!(
+            expected_path1,
+            cache.add_item(
+                expected_path1.parent().unwrap(),
+                item1.clone(),
+            ).unwrap(),
+        );
+
+        let item2 = item("test2.jpg", 2000, 1, 1);
+        let expected_path2 =
+            path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00 (1).jpeg");
+        assert_eq!(
+            expected_path2,
+            cache.add_item(
+                expected_path2.parent().unwrap(),
+                item2.clone(),
+            ).unwrap(),
+        );
+        assert_eq!(
+            Some(&Entry::Item(item2)),
+            cache.lookup(&expected_path2),
+        );
+    }
+
+    /// Tests that timestamps are correct.
+    #[test]
+    fn test_timestamp() {
+        let mut cache = Cache::new("/base".into());
+
+        let item1 = item("test1.jpg", 2000, 1, 1);
+        let expected_path1 =
+            path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
+        assert_eq!(
+            expected_path1,
+            cache.add_item(
+                expected_path1.parent().unwrap(),
+                item1.clone(),
+            ).unwrap(),
+        );
+        assert_eq!(
+            Some(item1.timestamp.as_ref().to_timespec()),
+            cache.lookup(&"/").map(|e| e.timestamp()),
+        );
+
+        let item2 = item("test2.jpg", 2000, 1, 2);
+        cache
+            .add_item(expected_path1.parent().unwrap(), item2.clone())
+            .unwrap();
+        assert_eq!(
+            Some(item2.timestamp.as_ref().to_timespec()),
+            cache.lookup(&"/").map(|e| e.timestamp()),
+        );
+    }
+
+    /// Tests that clearing removes everything.
+    #[test]
+    fn test_clear() {
+        let mut cache = Cache::new("/base".into());
+
+        let item = item("test.jpg", 2000, 1, 1);
+        let expected_path =
+            path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
+        assert_eq!(
+            expected_path,
+            cache.add_item(
+                expected_path.parent().unwrap(),
+                item.clone()
+            ).unwrap(),
+        );
+        cache.root.clear();
+        assert_eq!(
+           None,
+            cache.lookup(&expected_path),
+        );
+    }
+}
