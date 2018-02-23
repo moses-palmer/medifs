@@ -1,6 +1,10 @@
 use std::cmp;
 use std::ffi;
+use std::fmt;
 use std::path;
+
+use mime;
+use mime_guess;
 
 
 /// A path.
@@ -42,5 +46,100 @@ impl PartialOrd for Path {
 impl Ord for Path {
     fn cmp(&self, other: &Path) -> cmp::Ordering {
         self.0.cmp(&other.0)
+    }
+}
+
+
+/// An item that has a file base.
+pub trait FileBase {
+    /// The type of the extension.
+    type T: fmt::Display;
+
+    /// The base of this item.
+    fn file_base(&self) -> Self::T;
+}
+
+
+/// An item that has a file extension.
+pub trait FileExtension {
+    /// The type of the extension.
+    type T: fmt::Display;
+
+    /// The extension of this item.
+    fn file_extension(&self) -> Self::T;
+}
+
+impl FileExtension for mime::Mime {
+    type T = &'static str;
+
+    fn file_extension(&self) -> Self::T {
+        // Unfortunately we cannot rely on mime::guess_mime_type to return the
+        // preferred extension, so we explicitly handle JPEG and PNG
+        if self == &mime::IMAGE_JPEG {
+            &"jpeg"
+        } else if self == &mime::IMAGE_PNG {
+            &"png"
+        } else {
+            mime_guess::get_mime_extensions(&self)
+                .and_then(|mts| mts.iter().next())
+                .unwrap_or(&"bin")
+        }
+    }
+}
+
+
+/// Constructs a file name from a base, a file type and an index.
+///
+/// The title
+///
+/// # Arguments
+/// *  `base` - The base name.
+/// *  `ext` - The file extension.
+/// *  `index` - An index to incorporate into the name in case of multiple
+///    items with the same name.
+pub fn name<B: FileBase, E: FileExtension>(
+    base: &B,
+    ext: &E,
+    index: usize,
+) -> path::PathBuf {
+    if index > 0 {
+        format!("{} ({}).{}", base.file_base(), index, ext.file_extension())
+            .into()
+    } else {
+        format!("{}.{}", base.file_base(), ext.file_extension()).into()
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use mime;
+
+    use super::*;
+
+    impl FileBase for String {
+        type T = String;
+
+        fn file_base(&self) -> Self::T {
+            self.clone()
+        }
+    }
+
+
+    /// Tests that the name is generated as expected.
+    #[test]
+    fn name_correct() {
+        assert_eq!(
+            path::PathBuf::from("test1.jpeg"),
+            name(&String::from("test1"), &mime::IMAGE_JPEG, 0),
+        );
+        assert_eq!(
+            path::PathBuf::from("test2 (1).jpeg"),
+            name(&String::from("test2"), &mime::IMAGE_JPEG, 1),
+        );
+        assert_eq!(
+            path::PathBuf::from("test3 (2).png"),
+            name(&String::from("test3"), &mime::IMAGE_PNG, 2),
+        );
     }
 }

@@ -2,10 +2,9 @@ use std::collections;
 use std::fmt;
 use std::path;
 
-use mime;
 use mime_guess;
 
-use super::{Tag, TIME_FORMAT, Timestamp};
+use super::{FileBase, FileExtension, Tag, Timestamp};
 
 
 /// A media item.
@@ -50,34 +49,26 @@ impl Item {
             media_type,
         }
     }
+}
 
-    /// Constructs the name to use for this item.
-    ///
-    /// The title
-    ///
-    /// # Arguments
-    /// *  `index` - An index to incorporate into the name in case of multiple
-    ///    items with the same name.
-    pub fn name(&self, index: usize) -> path::PathBuf {
-        // Unfortunately we cannot rely on mime::guess_mime_type to return the
-        // preferred extension, so we explicitly handle JPEG and PNG
-        let ext = if self.media_type == mime::IMAGE_JPEG {
-            &"jpeg"
-        } else if self.media_type == mime::IMAGE_PNG {
-            &"png"
-        } else {
-            mime_guess::get_mime_extensions(&self.media_type)
-                .and_then(|mts| mts.iter().next())
-                .unwrap_or(&"bin")
-        };
 
-        if index > 0 {
-            format!("{} ({}).{}", self, index, ext).into()
-        } else {
-            format!("{}.{}", self, ext).into()
-        }
+impl FileBase for Item {
+    type T = Timestamp;
+
+    fn file_base(&self) -> Self::T {
+        self.timestamp.clone()
     }
 }
+
+
+impl FileExtension for Item {
+    type T = &'static str;
+
+    fn file_extension(&self) -> Self::T {
+        self.media_type.file_extension()
+    }
+}
+
 
 impl PartialEq for Item {
     fn eq(&self, other: &Item) -> bool {
@@ -90,11 +81,7 @@ impl Eq for Item {}
 
 impl fmt::Display for Item {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(
-            formatter,
-            "{}",
-            self.timestamp.as_ref().strftime(TIME_FORMAT).unwrap()
-        )
+        self.file_base().fmt(formatter)
     }
 }
 
@@ -102,6 +89,8 @@ impl fmt::Display for Item {
 #[cfg(test)]
 mod tests {
     use std::path;
+
+    use mime;
 
     use super::*;
 
@@ -147,25 +136,6 @@ mod tests {
         assert_eq!(
             String::from("2000-01-01 12:00"),
             item.to_string(),
-        );
-    }
-
-    /// Tests that the name is generated as expected.
-    #[test]
-    fn name() {
-        let item = Item::new(
-            path::Path::new("some file.jpg"),
-            (2000, 01, 01, 12, 0, 0),
-            collections::HashSet::new(),
-        );
-
-        assert_eq!(
-            path::PathBuf::from("2000-01-01 12:00.jpeg"),
-            item.name(0),
-        );
-        assert_eq!(
-            path::PathBuf::from("2000-01-01 12:00 (1).jpeg"),
-            item.name(1),
         );
     }
 }

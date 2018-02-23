@@ -39,6 +39,21 @@ impl Entry {
         }
     }
 
+    /// Constructs the name to use for this entry.
+    ///
+    /// # Arguments
+    /// *  `index` - An index to incorporate into the name in case of multiple
+    ///    entries with the same name.
+    ///
+    /// # Panics
+    /// This method will panic if passed as directory entry.
+    pub fn name(&self, index: usize) -> path::PathBuf {
+        match self {
+            &Entry::Item(ref item) => data::name(item, item, index),
+            _ => panic!(""),
+        }
+    }
+
     /// Clears this entry and its child entries.
     ///
     /// This has an effect only on directory entries.
@@ -121,22 +136,7 @@ impl Cache {
                 .collect()
         };
 
-        if let Some(&mut Entry::Directory(ref mut tree)) =
-            self.assert_exists(&directory)
-        {
-            let mut index = 0;
-            loop {
-                let name = item.name(index).as_os_str().to_os_string();
-                if !tree.contains_key(&name) {
-                    tree.insert(name.clone(), Entry::Item(item));
-                    return Ok([directory, name.into()].iter().collect());
-                } else {
-                    index += 1;
-                }
-            }
-        } else {
-            Err(item)
-        }
+        self.add_item(directory, item)
     }
 
     /// Adds a sequence of items to the file system.
@@ -174,6 +174,63 @@ impl Cache {
                 |_| self.add(item).map(|_| ()).map_err(|item| Some(item)),
             )
         })
+    }
+
+    /// Adds a single item to the file system.
+    ///
+    /// On success, the path of the new item is returned.
+    ///
+    /// This method will fail if an item named after the generated parent
+    /// directory for `item` exists and is not a directory.
+    ///
+    /// # Arguments
+    /// *  `item` - The item to add.
+    fn add_item<P: AsRef<path::Path>>(
+        &mut self,
+        directory: P,
+        item: data::Item,
+    ) -> AddItemResult {
+        if let Some(&mut Entry::Directory(ref mut tree)) =
+            self.assert_exists(&directory)
+        {
+            Ok(Self::add_with_index(&directory, tree, Entry::Item(item)))
+        } else {
+            Err(item)
+        }
+    }
+
+    /// Adds an item under a tree by incrementing an index until a unique name
+    /// is found.
+    ///
+    /// If the first attempt succeeds, no index is added.
+    ///
+    /// # Arguments
+    /// *  `directory` - The path of the directory tree.
+    /// *  `tree` - The directory tree to which to add the item.
+    /// *  `entry` - The entry to add. This must not be a directory entry.
+    ///
+    /// # Panics
+    /// This method will panic if passed as directory entry.
+    fn add_with_index<P: AsRef<path::Path>>(
+        directory: &P,
+        tree: &mut Tree,
+        entry: Entry,
+    ) -> path::PathBuf {
+        let directory: &path::Path = directory.as_ref();
+        let mut index = 0;
+
+        // Construct a suitable name
+        let name = loop {
+            let name = entry.name(index).as_os_str().to_os_string();
+            if !tree.contains_key(&name) {
+                break name;
+            } else {
+                index += 1;
+            }
+        };
+
+        tree.insert(name.clone(), entry);
+        directory.join(name)
     }
 
     /// Asserts that a path exists.

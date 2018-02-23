@@ -1,11 +1,12 @@
 use std;
+use std::fmt;
 use std::path;
 
 use time;
 
 
 /// The time format used for item timestamps.
-pub const TIME_FORMAT: &str = "%Y-%m-%d %H:%M";
+const TIME_FORMAT: &str = "%Y-%m-%d %H:%M";
 
 
 /// Extracts the modified timestamp from a file.
@@ -63,6 +64,14 @@ impl Timestamp {
         return self.0.tm_mday;
     }
 }
+
+
+impl fmt::Display for Timestamp {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        write!(fmt, "{}", self.0.strftime(TIME_FORMAT).unwrap())
+    }
+}
+
 
 impl From<time::Tm> for Timestamp {
     /// Converts a calendar time by wrapping it.
