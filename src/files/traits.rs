@@ -68,6 +68,26 @@ impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultEntry {
                     })
                     .map_err(util::map_error)
             }
+            &files::cache::Entry::Link(_, _) => {
+                Ok((
+                    ttl,
+                    fuse_mt::FileAttr {
+                        size: 0,
+                        blocks: 0,
+                        atime: timestamp,
+                        mtime: timestamp,
+                        ctime: timestamp,
+                        crtime: timestamp,
+                        kind: fuse_mt::FileType::Symlink,
+                        perm: 0o555,
+                        nlink: 1,
+                        uid: 0,
+                        gid: 0,
+                        rdev: 0,
+                        flags: 0,
+                    },
+                ))
+            }
         }
     }
 }
@@ -94,6 +114,9 @@ impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultReaddir {
                                     }
                                     &files::cache::Entry::Item(_) => {
                                         fuse_mt::FileType::RegularFile
+                                    }
+                                    &files::cache::Entry::Link(_, _) => {
+                                        fuse_mt::FileType::Symlink
                                     }
                                 },
                             }

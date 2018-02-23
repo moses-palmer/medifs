@@ -23,6 +23,9 @@ pub enum Entry {
 
     /// An item entry. The value is the item.
     Item(data::Item),
+
+    /// A link to another item.
+    Link(time::Timespec, ffi::OsString),
 }
 
 impl Entry {
@@ -36,6 +39,7 @@ impl Entry {
                     .unwrap_or(time::Timespec::new(0, 0))
             }
             &Entry::Item(ref item) => item.timestamp.as_ref().to_timespec(),
+            &Entry::Link(timestamp, _) => timestamp,
         }
     }
 
@@ -50,6 +54,7 @@ impl Entry {
     pub fn name(&self, index: usize) -> path::PathBuf {
         match self {
             &Entry::Item(ref item) => data::name(item, item, index),
+            &Entry::Link(_, ref path) => data::name(path, path, index),
             _ => panic!(""),
         }
     }

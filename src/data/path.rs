@@ -59,6 +59,18 @@ pub trait FileBase {
     fn file_base(&self) -> Self::T;
 }
 
+impl FileBase for ffi::OsString {
+    type T = String;
+
+    fn file_base(&self) -> Self::T {
+        let path: &path::Path = self.as_ref();
+        path.file_stem()
+            .and_then(|s| s.to_str())
+            .map(String::from)
+            .unwrap_or(String::from("bin"))
+    }
+}
+
 
 /// An item that has a file extension.
 pub trait FileExtension {
@@ -67,6 +79,18 @@ pub trait FileExtension {
 
     /// The extension of this item.
     fn file_extension(&self) -> Self::T;
+}
+
+impl FileExtension for ffi::OsString {
+    type T = String;
+
+    fn file_extension(&self) -> Self::T {
+        let path: &path::Path = self.as_ref();
+        path.extension()
+            .and_then(|s| s.to_str())
+            .map(String::from)
+            .unwrap_or(String::from("bin"))
+    }
 }
 
 impl FileExtension for mime::Mime {
