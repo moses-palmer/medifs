@@ -1,6 +1,7 @@
 use std::fs;
 use std::io;
 use std::io::{Read, Seek};
+use std::os::unix::ffi::OsStrExt;
 use std::os::unix::io::{FromRawFd, IntoRawFd};
 use std::path;
 use std::sync;
@@ -63,6 +64,23 @@ impl fuse_mt::FilesystemMT for MediaFS {
         let result: fuse_mt::ResultEntry = lookup!(cache!(self.cache), &path)
             .into();
         result.map(|(ttl, fa)| (ttl, fa.for_user(req.uid, req.gid)))
+    }
+
+    fn readlink(
+        &self,
+        _req: fuse_mt::RequestInfo,
+        path: &path::Path,
+    ) -> fuse_mt::ResultData {
+        notify!(self.source);
+        match lookup!(cache!(self.cache), &path) {
+            &cache::Entry::Link(_, ref path) => Ok(
+                path.as_bytes()
+                    .iter()
+                    .map(|&b| b)
+                    .collect(),
+            ),
+            _ => Err(libc::EINVAL),
+        }
     }
 
     fn opendir(
@@ -280,8 +298,9 @@ mod tests {
         // Create temporary directories and the file system handler
         let mount_point = tempdir::TempDir::new(&"medifs-mount").unwrap();
         let source_dir = tempdir::TempDir::new(&"medifs-source").unwrap();
-        let cache =
-            Cache::new(sync::RwLock::new(cache::Cache::new("All".into())));
+        let cache = Cache::new(sync::RwLock::new(
+            cache::Cache::new("All".into(), "Tagged".into()),
+        ));
         let source = Source::new(sync::RwLock::new(Box::new(MockSource {})));
         let mediafs = MediaFS::new(cache.clone(), source.clone());
 
