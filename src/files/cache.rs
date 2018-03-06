@@ -148,7 +148,23 @@ impl Cache {
                 .collect()
         };
 
-        self.add_item(directory, item)
+        let tags = item.tags.clone();
+        self.add_item(directory, item.clone()).and_then(|path| {
+            for tag in tags {
+                let directory = {
+                    let mut directory = path::PathBuf::from(&self.tagged_root);
+                    if let Some(ref parent) = tag.parent {
+                        directory.push(&parent)
+                    }
+                    directory.push(&tag.leaf);
+
+                    directory
+                };
+                self.add_link(&directory, &path, &item);
+            }
+
+            Ok(path)
+        })
     }
 
     /// Adds a sequence of items to the file system.
@@ -208,6 +224,43 @@ impl Cache {
             Ok(Self::add_with_index(&directory, tree, Entry::Item(item)))
         } else {
             Err(item)
+        }
+    }
+
+    /// Adds a link to an item to the file system.
+    ///
+    /// # Arguments
+    /// *  `tag` - The item tag.
+    /// *  `path` - The target path.
+    fn add_link<P: AsRef<path::Path>>(
+        &mut self,
+        directory: P,
+        path: P,
+        item: &data::Item,
+    ) {
+        let directory: &path::Path = directory.as_ref();
+        let path: &path::Path = path.as_ref();
+
+        // TODO: Rename item and try again?
+        if let Some(&mut Entry::Directory(ref mut tree)) =
+            self.assert_exists(&directory)
+        {
+            let mut relative = {
+                let mut relative = path::PathBuf::new();
+                for _ in directory.components() {
+                    relative.push("..");
+                }
+                relative.push(path);
+                relative
+            };
+            Self::add_with_index(
+                &directory,
+                tree,
+                Entry::Link(
+                    item.timestamp.as_ref().to_timespec(),
+                    relative.into_os_string(),
+                ),
+            );
         }
     }
 
