@@ -3,7 +3,7 @@ use libc;
 
 use time;
 
-use files;
+use data;
 use super::util;
 
 
@@ -18,12 +18,12 @@ pub trait ForUser {
 }
 
 
-impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultEntry {
-    fn from(source: &'a files::cache::Entry) -> fuse_mt::ResultEntry {
+impl<'a> From<&'a data::cache::Entry> for fuse_mt::ResultEntry {
+    fn from(source: &'a data::cache::Entry) -> fuse_mt::ResultEntry {
         let ttl = time::Timespec::new(0x7FFFFFFF, 0);
         let timestamp = source.timestamp();
         match source {
-            &files::cache::Entry::Directory(_) => {
+            &data::cache::Entry::Directory(_) => {
                 Ok((
                     ttl,
                     fuse_mt::FileAttr {
@@ -43,7 +43,7 @@ impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultEntry {
                     },
                 ))
             }
-            &files::cache::Entry::Item(ref item) => {
+            &data::cache::Entry::Item(ref item) => {
                 item.path
                     .metadata()
                     .map(|meta| {
@@ -68,7 +68,7 @@ impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultEntry {
                     })
                     .map_err(util::map_error)
             }
-            &files::cache::Entry::Link(_, _) => {
+            &data::cache::Entry::Link(_, _) => {
                 Ok((
                     ttl,
                     fuse_mt::FileAttr {
@@ -99,23 +99,23 @@ impl ForUser for fuse_mt::FileAttr {
 }
 
 
-impl<'a> From<&'a files::cache::Entry> for fuse_mt::ResultReaddir {
-    fn from(source: &'a files::cache::Entry) -> fuse_mt::ResultReaddir {
+impl<'a> From<&'a data::cache::Entry> for fuse_mt::ResultReaddir {
+    fn from(source: &'a data::cache::Entry) -> fuse_mt::ResultReaddir {
         match source {
-            &files::cache::Entry::Directory(ref tree) => {
+            &data::cache::Entry::Directory(ref tree) => {
                 Ok(
                     tree.iter()
                         .map(|(name, entry)| {
                             fuse_mt::DirectoryEntry {
                                 name: name.to_os_string(),
                                 kind: match entry {
-                                    &files::cache::Entry::Directory(_) => {
+                                    &data::cache::Entry::Directory(_) => {
                                         fuse_mt::FileType::Directory
                                     }
-                                    &files::cache::Entry::Item(_) => {
+                                    &data::cache::Entry::Item(_) => {
                                         fuse_mt::FileType::RegularFile
                                     }
-                                    &files::cache::Entry::Link(_, _) => {
+                                    &data::cache::Entry::Link(_, _) => {
                                         fuse_mt::FileType::Symlink
                                     }
                                 },

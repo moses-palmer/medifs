@@ -9,9 +9,8 @@ use std::sync;
 use fuse_mt;
 use libc;
 
+use data;
 use sources;
-
-pub mod cache;
 
 mod traits;
 use self::traits::*;
@@ -21,7 +20,7 @@ mod util;
 mod macros;
 
 /// The type used as cache.
-pub type Cache = sync::Arc<sync::RwLock<cache::Cache>>;
+pub type Cache = sync::Arc<sync::RwLock<data::cache::Cache>>;
 
 
 /// The type used as source.
@@ -73,7 +72,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
     ) -> fuse_mt::ResultData {
         notify!(self.source);
         match lookup!(cache!(self.cache), &path) {
-            &cache::Entry::Link(_, ref path) => Ok(
+            &data::cache::Entry::Link(_, ref path) => Ok(
                 path.as_bytes()
                     .iter()
                     .map(|&b| b)
@@ -91,7 +90,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
     ) -> fuse_mt::ResultOpen {
         notify!(self.source);
         match lookup!(cache!(self.cache), &path) {
-            &cache::Entry::Directory(_) => Ok((0, 0)),
+            &data::cache::Entry::Directory(_) => Ok((0, 0)),
             _ => Err(libc::ENOTDIR),
         }
     }
@@ -114,7 +113,7 @@ impl fuse_mt::FilesystemMT for MediaFS {
     ) -> fuse_mt::ResultOpen {
         notify!(self.source);
         match lookup!(cache!(self.cache), &path) {
-            &cache::Entry::Item(ref item) => {
+            &data::cache::Entry::Item(ref item) => {
                 fs::File::open(&item.path)
                     .map(|f| (f.into_raw_fd() as u64, flags))
                     .map_err(util::map_error)
@@ -299,7 +298,7 @@ mod tests {
         let mount_point = tempdir::TempDir::new(&"medifs-mount").unwrap();
         let source_dir = tempdir::TempDir::new(&"medifs-source").unwrap();
         let cache = Cache::new(sync::RwLock::new(
-            cache::Cache::new("All".into(), "Tagged".into()),
+            data::cache::Cache::new("All".into(), "Tagged".into()),
         ));
         let source = Source::new(sync::RwLock::new(Box::new(MockSource {})));
         let mediafs = MediaFS::new(cache.clone(), source.clone());

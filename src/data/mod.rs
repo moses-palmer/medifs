@@ -1,3 +1,5 @@
+pub mod cache;
+
 mod item;
 pub use self::item::Item;
 
