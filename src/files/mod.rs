@@ -11,10 +11,10 @@ use libc;
 
 use data;
 use sources;
+use util;
 
 mod traits;
 use self::traits::*;
-mod util;
 
 #[macro_use]
 mod macros;
