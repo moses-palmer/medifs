@@ -1,4 +1,5 @@
 pub mod cache;
+pub mod traits;
 
 mod item;
 pub use self::item::Item;
