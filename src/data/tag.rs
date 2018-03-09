@@ -8,11 +8,8 @@ use std::str;
 /// parent.
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Tag {
-    /// The name of the parent tag.
-    pub parent: Option<String>,
-
-    /// The last part of the tag name.
-    pub leaf: String,
+    /// The individual parts of this tag.
+    pub parts: Vec<String>,
 }
 
 impl Tag {
@@ -25,84 +22,43 @@ impl Tag {
     ///
     ///    This value may contain any number of separators.
     pub fn new(path: &str) -> Self {
-        let (parent, leaf) = Self::split(path);
-        Self { parent, leaf }
-    }
-
-    /// Creates a root tag.
-    ///
-    /// A root tag may not contain any separators.
-    ///
-    /// # Arguments
-    /// *  `name` - The name of the root tag.
-    pub fn root(name: &str) -> Option<Self> {
-        if Self::is_flat(name) {
-            Some(Self {
-                parent: None,
-                leaf: name.to_string(),
-            })
-        } else {
-            None
-        }
+        Self { parts: path.split(Self::SEPARATOR).map(String::from).collect() }
     }
 
     /// Creates a leaf tag.
     ///
-    /// A the name of a leaf tag may not contain any separators.
+    /// `name` is split on separators and each individual part is added.
     ///
     /// # Arguments
     /// *  `parent` - The parent tag.
     /// *  `name` - The name of the leaf tag.
-    pub fn leaf(parent: &Tag, name: &str) -> Option<Self> {
-        if Self::is_flat(name) {
-            Some(Self {
-                parent: Some(parent.to_string()),
-                leaf: name.to_string(),
-            })
-        } else {
-            None
-        }
+    pub fn leaf(&self, name: &str) -> Self {
+        let mut parts = self.parts.clone();
+        parts.extend(name.split(Self::SEPARATOR).map(String::from));
+        Self { parts }
     }
 
     /// Returns whether this is a root tag.
-    pub fn is_root(self) -> bool {
-        self.parent.is_none()
+    pub fn is_root(&self) -> bool {
+        self.parts.len() < 2
     }
 
-    /// Splits a string into possibly the parent part and the final part.
-    ///
-    /// A string with no separators will yield no parent part. An empty string
-    /// will yield no parent part and an empty name part.
-    ///
-    /// # Arguments
-    /// *  `name` - The string to split.
-    fn split(name: &str) -> (Option<String>, String) {
-        if let Some(index) = name.rfind(Self::SEPARATOR) {
-            let (parent, leaf) = name.split_at(index);
-            (Some(parent.to_string()), leaf[1..].to_string())
-        } else {
-            (None, name.to_string())
-        }
-    }
-
-    /// Determines whether a tag name is flat.
-    ///
-    /// A flat name does not contain any separatos.
-    ///
-    /// # Arguments
-    /// *  `name` - The name of the tag.
-    fn is_flat(name: &str) -> bool {
-        !name.contains(Self::SEPARATOR)
+    /// Returns the leaf name.
+    pub fn name(&self) -> Option<&String> {
+        self.parts.last()
     }
 }
 
 impl fmt::Display for Tag {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        if let Some(ref parent) = self.parent {
-            write!(formatter, "{}{}{}", parent, Self::SEPARATOR, self.leaf)
-        } else {
-            write!(formatter, "{}", self.leaf)
+        for (i, part) in self.parts.iter().enumerate() {
+            if i == 0 {
+                write!(formatter, "{}", part)?;
+            } else {
+                write!(formatter, "{}{}", Self::SEPARATOR, part)?;
+            }
         }
+        Ok(())
     }
 }
 
@@ -129,39 +85,24 @@ impl str::FromStr for Tag {
 mod test {
     use super::*;
 
-    /// Tests that `root` works as expected.
-    #[test]
-    fn root() {
-        assert!(Tag::root("root").is_some());
-        assert_eq!("root", Tag::root("root").unwrap().to_string());
-
-        assert!(Tag::root("root/leaf").is_none());
-    }
-
     /// Tests that `leaf` works as expected.
     #[test]
     fn leaf() {
         let root = Tag::new("root");
-
-        assert!(Tag::leaf(&root, "leaf").is_some());
-        assert_eq!("root/leaf", Tag::leaf(&root, "leaf").unwrap().to_string());
-
-        assert!(Tag::leaf(&root, "leaf/sub").is_none());
+        assert_eq!("root/leaf", root.leaf("leaf").to_string());
     }
 
     /// Tests that `is_root` works as expected.
     #[test]
     fn is_root() {
-        assert!(Tag::root("root").unwrap().is_root());
-
-        let root = Tag::root("root").unwrap();
-        assert!(!Tag::leaf(&root, "leaf").unwrap().is_root());
+        let root = Tag::new("root");
+        assert!(root.is_root());
+        assert!(!root.leaf("leaf").is_root());
     }
 
     /// Test that a tag without parent behaves correctly.
     #[test]
     fn no_parent() {
-        assert_eq!("root", Tag::root("root").unwrap().to_string());
         assert_eq!("root", Tag::new("root").to_string());
     }
 
@@ -170,20 +111,18 @@ mod test {
     fn with_parent() {
         let root = Tag::new("root");
 
-        let leaf1 = Tag::leaf(&root, "leaf").unwrap();
-        assert_eq!(Some("root".to_string()), leaf1.parent);
-        assert_eq!("leaf", leaf1.leaf);
+        let leaf1 = root.leaf("leaf");
+        assert_eq!(Some(&String::from("leaf")), leaf1.name());
         assert_eq!("root/leaf", leaf1.to_string());
 
-        let leaf2 = Tag::leaf(&leaf1, "sub").unwrap();
-        assert_eq!(Some("root/leaf".to_string()), leaf2.parent);
-        assert_eq!("sub", leaf2.leaf);
+        let leaf2 = leaf1.leaf("sub");
+        assert_eq!(Some(&String::from("sub")), leaf2.name());
         assert_eq!("root/leaf/sub", leaf2.to_string());
     }
 
     /// Tests that an invalid string cannot be parsed.
     #[test]
-    fn from_string_invalid() {
+    fn from_str_invalid() {
         assert_eq!(Err(()), "".parse::<Tag>());
         assert_eq!(Err(()), "/starts".parse::<Tag>());
         assert_eq!(Err(()), "ends/".parse::<Tag>());
@@ -198,15 +137,13 @@ mod test {
 
     /// Tests parsing of nested tags.
     #[test]
-    fn from_string_with_parent() {
+    fn from_str_with_parent() {
         let leaf1 = "root/leaf".parse::<Tag>().unwrap();
-        assert_eq!(Some("root".to_string()), leaf1.parent);
-        assert_eq!("leaf", leaf1.leaf);
+        assert_eq!(Some(&String::from("leaf")), leaf1.name());
         assert_eq!("root/leaf", leaf1.to_string());
 
         let leaf2 = "root/leaf/sub".parse::<Tag>().unwrap();
-        assert_eq!(Some("root/leaf".to_string()), leaf2.parent);
-        assert_eq!("sub", leaf2.leaf);
+        assert_eq!(Some(&String::from("sub")), leaf2.name());
         assert_eq!("root/leaf/sub", leaf2.to_string());
     }
 }
