@@ -43,6 +43,20 @@ impl Tag {
         self.parts.len() < 2
     }
 
+    /// Returns whether this tag is a parent of another tag.
+    ///
+    /// A tag is a parent of another tag if the other tag if more deeply nested
+    /// and shares all initial parts with this tag.
+    ///
+    /// # Arguments
+    /// *  `other` - The tag to check.
+    pub fn is_parent_of(&self, other: &Self) -> bool {
+        other.parts.len() > self.parts.len() &&
+            self.parts.iter().zip(other.parts.iter()).all(
+                |(a, b)| a == b,
+            )
+    }
+
     /// Returns the leaf name.
     pub fn name(&self) -> Option<&String> {
         self.parts.last()
@@ -145,5 +159,14 @@ mod test {
         let leaf2 = "root/leaf/sub".parse::<Tag>().unwrap();
         assert_eq!(Some(&String::from("sub")), leaf2.name());
         assert_eq!("root/leaf/sub", leaf2.to_string());
+    }
+
+    #[test]
+    fn is_parent_of() {
+        assert!(Tag::new("a").is_parent_of(&Tag::new("a/b")));
+        assert!(Tag::new("a").is_parent_of(&Tag::new("a/b/c")));
+        assert!(!Tag::new("a/b").is_parent_of(&Tag::new("a/b")));
+        assert!(!Tag::new("a/b").is_parent_of(&Tag::new("a")));
+        assert!(!Tag::new("b/a").is_parent_of(&Tag::new("a")));
     }
 }
