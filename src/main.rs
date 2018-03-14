@@ -24,6 +24,7 @@ use sources::WithSources;
 pub mod data;
 pub mod files;
 pub mod sources;
+pub mod locator;
 pub mod types;
 pub mod util;
 
