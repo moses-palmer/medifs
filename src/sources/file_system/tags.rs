@@ -38,7 +38,7 @@ enum ItemMeta {
     Missing,
 
     /// A timestamp and a collection of tags.
-    Present(time::Tm, collections::HashSet<data::Tag>),
+    Present(time::Tm, collections::HashSet<String>),
 }
 
 impl ItemMeta {
@@ -83,11 +83,11 @@ impl ItemMeta {
     /// # Arguments
     /// *  `path` - The source path.
     /// *  `meta` - Image metadata.
-    fn tags(meta: &rexiv2::Metadata) -> collections::HashSet<data::Tag> {
+    fn tags(meta: &rexiv2::Metadata) -> collections::HashSet<String> {
         meta.get_tag_multiple_strings(IPTC_KEYWORDS_TAG_NAME)
             .map(|tags| {
                 tags.iter()
-                    .map(|s| s.parse().unwrap_or_else(|_| data::Tag::new(s)))
+                    .map(|s| s.parse().unwrap_or_else(|_| s.clone()))
                     .collect()
             })
             .unwrap_or_else(|_| collections::HashSet::new())

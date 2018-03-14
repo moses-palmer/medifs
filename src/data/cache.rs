@@ -152,7 +152,7 @@ impl Cache {
         self.add_item(directory, item.clone()).and_then(|path| {
             for tag in tags {
                 let directory = path::PathBuf::from(&self.tagged_root).join(
-                    tag.parts.iter().collect::<path::PathBuf>(),
+                    path::PathBuf::from(tag),
                 );
                 self.add_link(&directory, &path, &item);
             }
