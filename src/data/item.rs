@@ -4,7 +4,7 @@ use std::path;
 
 use mime_guess;
 
-use super::{FileBase, FileExtension, Tag, Timestamp};
+use super::{FileBase, FileExtension, Timestamp};
 
 
 /// A media item.
@@ -19,7 +19,7 @@ pub struct Item {
     pub timestamp: Timestamp,
 
     /// Tags applied to this item.
-    pub tags: collections::HashSet<Tag>,
+    pub tags: collections::HashSet<String>,
 
     /// The media type, guessed from the file extension.
     pub media_type: mime_guess::Mime,
@@ -37,7 +37,7 @@ impl Item {
     pub fn new<P: Into<path::PathBuf>, T: Into<Timestamp>>(
         path: P,
         timestamp: T,
-        tags: collections::HashSet<Tag>,
+        tags: collections::HashSet<String>,
     ) -> Self {
         let path: path::PathBuf = path.into();
         let timestamp: Timestamp = timestamp.into();
