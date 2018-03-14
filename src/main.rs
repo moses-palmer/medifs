@@ -2,9 +2,12 @@
 extern crate clap;
 extern crate fuse;
 extern crate fuse_mt;
+#[macro_use]
+extern crate lazy_static;
 extern crate libc;
 extern crate mime;
 extern crate mime_guess;
+extern crate regex;
 extern crate rexiv2;
 extern crate time;
 extern crate walkdir;
