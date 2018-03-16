@@ -41,7 +41,7 @@ pub fn system_time_to_timespec(st: std::time::SystemTime) -> time::Timespec {
 }
 
 /// A wrapped timestamp.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct Timestamp(time::Tm);
 
 impl Timestamp {
