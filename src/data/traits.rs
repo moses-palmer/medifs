@@ -8,13 +8,15 @@ use util;
 
 
 impl<'a> From<&'a data::cache::Entry> for fuse_mt::ResultEntry {
-    /// Converts a cache entry a _fuse_mt_ result.
+    /// Converts a cache entry to a [`fuse_mt::ResultEntry`] result.
     ///
     /// The result will have relevant information read from the actual source
     /// file, but timestamps overridden by the entry timestamp.
     ///
     /// # Arguments
     /// *  `source` - The entry to convert.
+    ///
+    /// [`fuse_mt::ResultEntry`]: https://docs.rs/fuse_mt/0.4/fuse_mt/type.ResultEntry.html
     fn from(source: &'a data::cache::Entry) -> fuse_mt::ResultEntry {
         let ttl = time::Timespec::new(0x7FFFFFFF, 0);
         let timestamp = source.timestamp();
