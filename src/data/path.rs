@@ -62,6 +62,11 @@ pub trait FileBase {
 impl FileBase for ffi::OsString {
     type T = String;
 
+    /// Converts an `OsString` to a `FileBase` by extracting the [file stem].
+    ///
+    /// If the file has no file stem, `"bin"` is returned.
+    ///
+    /// [file stem]: https://doc.rust-lang.org/stable/std/path/struct.Path.html#method.file_stem
     fn file_base(&self) -> Self::T {
         let path: &path::Path = self.as_ref();
         path.file_stem()
@@ -84,6 +89,12 @@ pub trait FileExtension {
 impl FileExtension for ffi::OsString {
     type T = String;
 
+    /// Converts an `OsString` to a `FileExtension` by extracting the
+    /// [extension].
+    ///
+    /// If the file has no extension, `"bin"` is returned.
+    ///
+    /// [extension]: https://doc.rust-lang.org/stable/std/path/struct.Path.html#method.extension
     fn file_extension(&self) -> Self::T {
         let path: &path::Path = self.as_ref();
         path.extension()
@@ -96,6 +107,9 @@ impl FileExtension for ffi::OsString {
 impl FileExtension for mime::Mime {
     type T = &'static str;
 
+    /// Converts a `Mime` instance to a file extension by guessing.
+    ///
+    /// If the file type is unknown, `"bin"` is returned.
     fn file_extension(&self) -> Self::T {
         // Unfortunately we cannot rely on mime::guess_mime_type to return the
         // preferred extension, so we explicitly handle JPEG and PNG
