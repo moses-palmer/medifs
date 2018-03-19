@@ -40,7 +40,7 @@ impl MediaFS {
     /// Creates a new file system instance.
     ///
     /// # Panics
-    /// This method påanics if the write lock on `source` cannot be taken.
+    /// This method panics if the write lock on `source` cannot be taken.
     pub fn new(cache: Cache, source: Source) -> MediaFS {
         source.write().unwrap().start();
         Self { cache, source }

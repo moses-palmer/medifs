@@ -114,7 +114,9 @@ impl FileExtension for mime::Mime {
 
 /// Constructs a file name from a base, a file type and an index.
 ///
-/// The title
+/// The result will consist of the base joined by the extension if `index` is
+/// `0`, otherwise `index` parenthesised will be inserted after the base and a
+/// space.
 ///
 /// # Arguments
 /// *  `base` - The base name.
