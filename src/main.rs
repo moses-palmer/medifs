@@ -18,11 +18,11 @@ use std::sync;
 
 use sources::WithSources;
 
-mod data;
-mod files;
-mod sources;
-mod types;
-mod util;
+pub mod data;
+pub mod files;
+pub mod sources;
+pub mod types;
+pub mod util;
 
 
 fn main() {
