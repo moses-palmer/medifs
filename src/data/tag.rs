@@ -45,7 +45,7 @@ impl Tag {
 
     /// Returns whether this tag is a parent of another tag.
     ///
-    /// A tag is a parent of another tag if the other tag if more deeply nested
+    /// A tag is a parent of another tag if the other tag is more deeply nested
     /// and shares all initial parts with this tag.
     ///
     /// # Arguments
