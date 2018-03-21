@@ -9,7 +9,7 @@ use super::{FileBase, FileExtension, Timestamp};
 /// A media item.
 ///
 /// Items have an origin path, a timestamp, a set of tags and a media type.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq)]
 pub struct Item {
     /// The path of the source item.
     pub path: path::PathBuf,
@@ -72,8 +72,6 @@ impl PartialEq for Item {
         self.path.eq(&other.path)
     }
 }
-
-impl Eq for Item {}
 
 
 impl fmt::Display for Item {
