@@ -4,10 +4,8 @@ use std::path;
 
 use time;
 
-
 /// The time format used for item timestamps.
 const TIME_FORMAT: &str = "%Y-%m-%d %H:%M";
-
 
 /// Extracts the modified timestamp from a file.
 ///
@@ -17,11 +15,10 @@ const TIME_FORMAT: &str = "%Y-%m-%d %H:%M";
 /// *  `path` - The path of the file.
 pub fn timestamp<P: AsRef<path::Path>>(path: &P) -> std::time::SystemTime {
     let path: &path::Path = path.as_ref();
-    path.metadata().and_then(|meta| meta.modified()).unwrap_or(
-        std::time::SystemTime::now(),
-    )
+    path.metadata()
+        .and_then(|meta| meta.modified())
+        .unwrap_or(std::time::SystemTime::now())
 }
-
 
 /// Converts a system time to a time spec.
 ///
@@ -42,7 +39,6 @@ pub fn system_time_to_timespec(st: std::time::SystemTime) -> time::Timespec {
 
     time::Timespec::new(sec, ns).into()
 }
-
 
 /// A wrapped timestamp.
 #[derive(Clone, Debug)]
@@ -65,13 +61,11 @@ impl Timestamp {
     }
 }
 
-
 impl fmt::Display for Timestamp {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         write!(fmt, "{}", self.0.strftime(TIME_FORMAT).unwrap())
     }
 }
-
 
 impl From<time::Tm> for Timestamp {
     /// Converts a calendar time by wrapping it.
@@ -153,7 +147,6 @@ impl From<time::Timespec> for Timestamp {
         Timestamp(time::at(source))
     }
 }
-
 
 impl AsRef<time::Tm> for Timestamp {
     fn as_ref(&self) -> &time::Tm {

@@ -5,13 +5,13 @@ mod item;
 pub use self::item::Item;
 
 mod path;
-pub use self::path::{Path, FileBase, FileExtension, name};
+pub use self::path::{name, FileBase, FileExtension, Path};
 
 mod tag;
 pub use self::tag::Tag;
 
 mod time;
-pub use self::time::{Timestamp, timestamp, system_time_to_timespec};
+pub use self::time::{system_time_to_timespec, timestamp, Timestamp};
 
 #[cfg(test)]
 pub mod tests {

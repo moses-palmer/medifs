@@ -3,7 +3,6 @@ use std::str;
 
 use clap;
 
-
 pub struct MountPoint(path::PathBuf);
 
 impl str::FromStr for MountPoint {

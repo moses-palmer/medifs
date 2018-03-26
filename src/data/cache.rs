@@ -6,14 +6,11 @@ use time;
 
 use data;
 
-
 /// A directory tree.
 pub type Tree = collections::HashMap<ffi::OsString, Entry>;
 
-
 /// The result of an item addition.
 pub type AddItemResult = Result<path::PathBuf, data::Item>;
-
 
 /// A cache entry.
 #[derive(Clone, Debug, PartialEq)]
@@ -32,12 +29,10 @@ impl Entry {
     /// Returns the latest timestamp selected from this and child entries.
     pub fn timestamp(&self) -> time::Timespec {
         match self {
-            &Entry::Directory(ref tree) => {
-                tree.values()
-                    .max_by(|a, b| a.timestamp().cmp(&b.timestamp()))
-                    .map(|entry| entry.timestamp())
-                    .unwrap_or(time::Timespec::new(0, 0))
-            }
+            &Entry::Directory(ref tree) => tree.values()
+                .max_by(|a, b| a.timestamp().cmp(&b.timestamp()))
+                .map(|entry| entry.timestamp())
+                .unwrap_or(time::Timespec::new(0, 0)),
             &Entry::Item(ref item) => item.timestamp.as_ref().to_timespec(),
             &Entry::Link(timestamp, _) => timestamp,
         }
@@ -70,7 +65,6 @@ impl Entry {
     }
 }
 
-
 /// A wrapper for the simple data cache.
 pub struct Cache {
     /// The root directory.
@@ -82,7 +76,6 @@ pub struct Cache {
     /// The root of the tagged items.
     tagged_root: ffi::OsString,
 }
-
 
 impl Cache {
     /// Creates a new file cache.
@@ -151,9 +144,8 @@ impl Cache {
         let tags = item.tags.clone();
         self.add_item(directory, item.clone()).and_then(|path| {
             for tag in tags {
-                let directory = path::PathBuf::from(&self.tagged_root).join(
-                    path::PathBuf::from(tag),
-                );
+                let directory = path::PathBuf::from(&self.tagged_root)
+                    .join(path::PathBuf::from(tag));
                 self.add_link(&directory, &path, &item);
             }
 
@@ -173,9 +165,9 @@ impl Cache {
         items: T,
     ) -> Result<(), Option<data::Item>> {
         items.fold(Ok(()), |acc, item| {
-            acc.and_then(
-                |_| self.add(item).map(|_| ()).map_err(|item| Some(item)),
-            )
+            acc.and_then(|_| {
+                self.add(item).map(|_| ()).map_err(|item| Some(item))
+            })
         })
     }
 
@@ -192,9 +184,9 @@ impl Cache {
     ) -> Result<(), Option<data::Item>> {
         self.root.clear();
         items.fold(Ok(()), |acc, item| {
-            acc.and_then(
-                |_| self.add(item).map(|_| ()).map_err(|item| Some(item)),
-            )
+            acc.and_then(|_| {
+                self.add(item).map(|_| ()).map_err(|item| Some(item))
+            })
         })
     }
 
@@ -306,9 +298,9 @@ impl Cache {
         &mut self,
         path: &P,
     ) -> Option<&mut Entry> {
-        path.as_ref().components().fold(
-            Some(&mut self.root),
-            |acc, part| match part {
+        path.as_ref()
+            .components()
+            .fold(Some(&mut self.root), |acc, part| match part {
                 // The root will be the first component, so we return the
                 // initial value unchanged, and for the current directory we do
                 // the same
@@ -317,26 +309,20 @@ impl Cache {
                 // Go deeper for normal files
                 path::Component::Normal(path) => {
                     acc.and_then(|entry| match *entry {
-                        Entry::Directory(ref mut tree) => {
-                            Some(
-                                tree.entry(path.to_os_string()).or_insert_with(
-                                    || {
-                                        Entry::Directory(Tree::new())
-                                    },
-                                ),
-                            )
-                        }
+                        Entry::Directory(ref mut tree) => Some(
+                            tree.entry(path.to_os_string()).or_insert_with(
+                                || Entry::Directory(Tree::new()),
+                            ),
+                        ),
                         _ => None,
                     })
                 }
 
                 // We support only absolute paths without special directories
                 _ => None,
-            },
-        )
+            })
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -362,15 +348,11 @@ mod tests {
             path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
         assert_eq!(
             expected_path,
-            cache.add_item(
-                expected_path.parent().unwrap(),
-                item.clone(),
-            ).unwrap(),
+            cache
+                .add_item(expected_path.parent().unwrap(), item.clone())
+                .unwrap(),
         );
-        assert_eq!(
-            Some(&Entry::Item(item)),
-            cache.lookup(&expected_path),
-        );
+        assert_eq!(Some(&Entry::Item(item)), cache.lookup(&expected_path),);
     }
 
     /// Tests that adding an item over a directory works.
@@ -383,10 +365,9 @@ mod tests {
             path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
         assert_eq!(
             expected_path1,
-            cache.add_item(
-                expected_path1.parent().unwrap(),
-                item1.clone(),
-            ).unwrap(),
+            cache
+                .add_item(expected_path1.parent().unwrap(), item1.clone())
+                .unwrap(),
         );
 
         let item2 = item("test2.jpg", 2000, 1, 1);
@@ -394,15 +375,11 @@ mod tests {
             path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00 (1).jpeg");
         assert_eq!(
             expected_path2,
-            cache.add_item(
-                expected_path2.parent().unwrap(),
-                item2.clone(),
-            ).unwrap(),
+            cache
+                .add_item(expected_path2.parent().unwrap(), item2.clone())
+                .unwrap(),
         );
-        assert_eq!(
-            Some(&Entry::Item(item2)),
-            cache.lookup(&expected_path2),
-        );
+        assert_eq!(Some(&Entry::Item(item2)), cache.lookup(&expected_path2),);
     }
 
     /// Tests that timestamps are correct.
@@ -415,10 +392,9 @@ mod tests {
             path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
         assert_eq!(
             expected_path1,
-            cache.add_item(
-                expected_path1.parent().unwrap(),
-                item1.clone(),
-            ).unwrap(),
+            cache
+                .add_item(expected_path1.parent().unwrap(), item1.clone())
+                .unwrap(),
         );
         assert_eq!(
             Some(item1.timestamp.as_ref().to_timespec()),
@@ -445,15 +421,11 @@ mod tests {
             path::PathBuf::from("/base/2000/01/01/2000-01-01 00:00.jpeg");
         assert_eq!(
             expected_path,
-            cache.add_item(
-                expected_path.parent().unwrap(),
-                item.clone()
-            ).unwrap(),
+            cache
+                .add_item(expected_path.parent().unwrap(), item.clone())
+                .unwrap(),
         );
         cache.root.clear();
-        assert_eq!(
-           None,
-            cache.lookup(&expected_path),
-        );
+        assert_eq!(None, cache.lookup(&expected_path),);
     }
 }

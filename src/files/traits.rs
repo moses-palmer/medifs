@@ -1,6 +1,5 @@
 use fuse_mt;
 
-
 /// Allows changing the owner of a resource.
 pub trait ForUser {
     /// Changes the owner and group of this item.
@@ -10,7 +9,6 @@ pub trait ForUser {
     /// *  `gid` - The group ID.
     fn for_user(self, uid: u32, gid: u32) -> Self;
 }
-
 
 impl ForUser for fuse_mt::FileAttr {
     /// Changes the permissions of a `FileAttr` by replacing the [`uid`] and

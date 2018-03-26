@@ -14,7 +14,6 @@ macro_rules! cache {
     }
 }
 
-
 /// Performs a lookup in a cache.
 ///
 /// If no corresponding entry exists, this macro will cause the current method
@@ -30,7 +29,6 @@ macro_rules! lookup {
         }
     }
 }
-
 
 /// Acquires a write lock on a source and sends a notification.
 ///

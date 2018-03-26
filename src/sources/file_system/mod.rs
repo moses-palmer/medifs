@@ -18,10 +18,8 @@ pub use self::directory::*;
 mod tags;
 pub use self::tags::*;
 
-
 /// The name of the argument specifying the root.
 const OPT_ROOT: &'static str = &"ROOT";
-
 
 /// Adds the base options for a file system source.
 ///
@@ -35,7 +33,6 @@ fn options<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
     )
 }
 
-
 /// Generates an item from a path.
 ///
 /// This trait must be implemented by file system sources.
@@ -46,7 +43,6 @@ pub trait FileSystemItemGenerator {
     /// *  `path` - The path for which to generate an item.
     fn item(&self, path: &path::Path) -> data::Item;
 }
-
 
 pub trait FileSystemSource: super::Source + FileSystemItemGenerator {
     /// Populates the cache with items from this source.
@@ -64,8 +60,8 @@ pub trait FileSystemSource: super::Source + FileSystemItemGenerator {
                         .into_iter()
                         .filter_map(|e| e.ok())
                         .filter(|e| {
-                            mime_guess::guess_mime_type(e.path()).type_() ==
-                                "image"
+                            mime_guess::guess_mime_type(e.path()).type_()
+                                == "image"
                         })
                         .map(|e| self.item(e.path())),
                 )
@@ -85,7 +81,6 @@ pub trait FileSystemSource: super::Source + FileSystemItemGenerator {
     fn root(&self) -> &path::PathBuf;
 }
 
-
 impl<T> super::Source for T
 where
     T: FileSystemSource + Sized,
@@ -104,9 +99,7 @@ where
     /// Reloads items from the file system if the root directory has been
     /// modified since the last time it was reloaded.
     fn notify(&mut self) {
-        if let Ok(timestamp) = self.root().metadata().and_then(
-            |m| m.modified(),
-        )
+        if let Ok(timestamp) = self.root().metadata().and_then(|m| m.modified())
         {
             if self.timestamp().map(|t| t < timestamp).unwrap_or(true) {
                 self.populate();
@@ -115,7 +108,6 @@ where
         }
     }
 }
-
 
 impl<P: AsRef<path::Path>> From<P> for data::Item {
     /// Converts as path to an item by simply reading the modification time.

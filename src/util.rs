@@ -2,7 +2,6 @@ use std::io;
 
 use libc;
 
-
 /// Maps an error kind to an `errno` number.
 ///
 /// # Arguments

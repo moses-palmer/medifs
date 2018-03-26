@@ -6,7 +6,6 @@ use mime_guess;
 
 use super::{FileBase, FileExtension, Timestamp};
 
-
 /// A media item.
 ///
 /// Items have an origin path, a timestamp, a set of tags and a media type.
@@ -51,7 +50,6 @@ impl Item {
     }
 }
 
-
 impl FileBase for Item {
     type T = Timestamp;
 
@@ -59,7 +57,6 @@ impl FileBase for Item {
         self.timestamp.clone()
     }
 }
-
 
 impl FileExtension for Item {
     type T = &'static str;
@@ -103,10 +100,7 @@ mod tests {
             collections::HashSet::new(),
         );
 
-        assert_eq!(
-            mime::APPLICATION_OCTET_STREAM,
-            item.media_type,
-        );
+        assert_eq!(mime::APPLICATION_OCTET_STREAM, item.media_type);
     }
 
     /// Tests creation of JPEG item.
@@ -118,10 +112,7 @@ mod tests {
             collections::HashSet::new(),
         );
 
-        assert_eq!(
-            mime::IMAGE_JPEG,
-            item.media_type,
-        );
+        assert_eq!(mime::IMAGE_JPEG, item.media_type);
     }
 
     /// Tests stringification.
@@ -133,9 +124,6 @@ mod tests {
             collections::HashSet::new(),
         );
 
-        assert_eq!(
-            String::from("2000-01-01 12:00"),
-            item.to_string(),
-        );
+        assert_eq!(String::from("2000-01-01 12:00"), item.to_string());
     }
 }

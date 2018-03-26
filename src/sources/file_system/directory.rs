@@ -9,11 +9,7 @@ use files;
 use super::*;
 use sources::*;
 
-
-file_system_base!(
-    DirectorySource,
-);
-
+file_system_base!(DirectorySource,);
 
 impl FileSystemItemGenerator for DirectorySource {
     /// Generates an item from a path.
@@ -25,7 +21,6 @@ impl FileSystemItemGenerator for DirectorySource {
     }
 }
 
-
 impl ConfigurableSource for DirectorySource {
     const SUBCOMMAND_NAME: &'static str = "directory";
 
@@ -33,7 +28,6 @@ impl ConfigurableSource for DirectorySource {
         options(app)
     }
 }
-
 
 impl ConstructableSource for DirectorySource {
     fn construct<'a>(

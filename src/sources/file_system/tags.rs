@@ -13,14 +13,11 @@ use files;
 use super::*;
 use sources::*;
 
-
 file_system_base!(
     TagsSource,
-
     // A cache of EXIF tags already read.
     tags: sync::RwLock<collections::HashMap<path::PathBuf, ItemMeta>>,
 );
-
 
 /// The exiv2 tag designated for creation time.
 const EXIT_TIMESTAMP_TAG_NAME: &str = &"Exif.Photo.DateTimeOriginal";
@@ -30,7 +27,6 @@ const EXIT_TIMESTAMP_TAG_FORMAT: &str = &"%Y:%m:%d %H:%M:%S";
 
 /// The exiv2 tag designated for keywords.
 const IPTC_KEYWORDS_TAG_NAME: &str = &"Iptc.Application2.Keywords";
-
 
 /// Information about a file.
 enum ItemMeta {
@@ -94,7 +90,6 @@ impl ItemMeta {
     }
 }
 
-
 impl<P: AsRef<path::Path>> From<P> for ItemMeta {
     /// Converts a path to item metadata.
     ///
@@ -116,8 +111,6 @@ impl<P: AsRef<path::Path>> From<P> for ItemMeta {
     }
 }
 
-
-
 impl FileSystemItemGenerator for TagsSource {
     /// Generates an item from a path.
     ///
@@ -134,7 +127,6 @@ impl FileSystemItemGenerator for TagsSource {
     }
 }
 
-
 impl ConfigurableSource for TagsSource {
     const SUBCOMMAND_NAME: &'static str = "tags";
 
@@ -142,7 +134,6 @@ impl ConfigurableSource for TagsSource {
         options(app)
     }
 }
-
 
 impl ConstructableSource for TagsSource {
     fn construct<'a>(

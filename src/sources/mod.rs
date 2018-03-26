@@ -5,7 +5,6 @@ use files;
 mod file_system;
 pub use self::file_system::*;
 
-
 /// A source of media files.
 pub trait Source: Send + Sync {
     /// Starts this source.
@@ -19,7 +18,6 @@ pub trait Source: Send + Sync {
     /// updated, and in that case update the cache.
     fn notify(&mut self);
 }
-
 
 /// A source of media files.
 pub trait ConfigurableSource: Source + Sized {
@@ -40,7 +38,6 @@ pub trait ConstructableSource: ConfigurableSource {
     ) -> Result<Self, String>;
 }
 
-
 /// An object with sources.
 pub trait WithSources<'a>: Sized {
     /// Applies all source to this instance.
@@ -54,7 +51,6 @@ pub trait WithSources<'a>: Sized {
     /// Applies a single source to this.
     fn with_source<S: ConfigurableSource>(self) -> Self;
 }
-
 
 impl<'a> From<(files::Cache, clap::ArgMatches<'a>)> for Box<Source> {
     /// Converts a cache and arguments to a boxed source.
@@ -81,11 +77,10 @@ impl<'a> From<(files::Cache, clap::ArgMatches<'a>)> for Box<Source> {
     }
 }
 
-
 impl<'a> WithSources<'a> for clap::App<'a, 'a> {
     fn with_source<S: ConfigurableSource>(self) -> Self {
-        self.subcommand(
-            S::options(clap::SubCommand::with_name(S::SUBCOMMAND_NAME)),
-        )
+        self.subcommand(S::options(clap::SubCommand::with_name(
+            S::SUBCOMMAND_NAME,
+        )))
     }
 }

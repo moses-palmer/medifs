@@ -6,7 +6,6 @@ use std::path;
 use mime;
 use mime_guess;
 
-
 /// A path.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Path(path::PathBuf);
@@ -49,7 +48,6 @@ impl Ord for Path {
     }
 }
 
-
 /// An item that has a file base.
 pub trait FileBase {
     /// The type of the extension.
@@ -75,7 +73,6 @@ impl FileBase for ffi::OsString {
             .unwrap_or(String::from("bin"))
     }
 }
-
 
 /// An item that has a file extension.
 pub trait FileExtension {
@@ -125,7 +122,6 @@ impl FileExtension for mime::Mime {
     }
 }
 
-
 /// Constructs a file name from a base, a file type and an index.
 ///
 /// The result will consist of the base joined by the extension if `index` is
@@ -150,7 +146,6 @@ pub fn name<B: FileBase, E: FileExtension>(
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use mime;
@@ -164,7 +159,6 @@ mod tests {
             self.clone()
         }
     }
-
 
     /// Tests that the name is generated as expected.
     #[test]
