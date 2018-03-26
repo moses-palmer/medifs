@@ -2,7 +2,8 @@ pub mod cache;
 pub mod traits;
 
 mod item;
-pub use self::item::Item;
+pub use self::item::{shared_collection, shared_monitor, Item, ItemCollection,
+                     ItemMonitor, SharedCollection, SharedMonitor};
 
 mod path;
 pub use self::path::{name, FileBase, FileExtension, Path};
