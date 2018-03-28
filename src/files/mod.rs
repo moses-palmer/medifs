@@ -22,10 +22,8 @@ mod macros;
 /// The type used as cache.
 pub type Cache = sync::Arc<sync::RwLock<data::cache::Cache>>;
 
-
 /// The type used as source.
 pub type Source = sync::Arc<sync::RwLock<Box<sources::Source>>>;
-
 
 /// The actual FUSE implementation.
 pub struct MediaFS {
@@ -47,7 +45,6 @@ impl MediaFS {
     }
 }
 
-
 impl fuse_mt::FilesystemMT for MediaFS {
     fn init(&self, _req: fuse_mt::RequestInfo) -> fuse_mt::ResultEmpty {
         Ok(())
@@ -60,8 +57,8 @@ impl fuse_mt::FilesystemMT for MediaFS {
         _fh: Option<u64>,
     ) -> fuse_mt::ResultEntry {
         notify!(self.source);
-        let result: fuse_mt::ResultEntry = lookup!(cache!(self.cache), &path)
-            .into();
+        let result: fuse_mt::ResultEntry =
+            lookup!(cache!(self.cache), &path).into();
         result.map(|(ttl, fa)| (ttl, fa.for_user(req.uid, req.gid)))
     }
 
@@ -72,12 +69,9 @@ impl fuse_mt::FilesystemMT for MediaFS {
     ) -> fuse_mt::ResultData {
         notify!(self.source);
         match lookup!(cache!(self.cache), &path) {
-            &data::cache::Entry::Link(_, ref path) => Ok(
-                path.as_bytes()
-                    .iter()
-                    .map(|&b| b)
-                    .collect(),
-            ),
+            &data::cache::Entry::Link(_, ref path) => {
+                Ok(path.as_bytes().iter().map(|&b| b).collect())
+            }
             _ => Err(libc::EINVAL),
         }
     }
@@ -113,11 +107,9 @@ impl fuse_mt::FilesystemMT for MediaFS {
     ) -> fuse_mt::ResultOpen {
         notify!(self.source);
         match lookup!(cache!(self.cache), &path) {
-            &data::cache::Entry::Item(ref item) => {
-                fs::File::open(&item.path)
-                    .map(|f| (f.into_raw_fd() as u64, flags))
-                    .map_err(util::map_error)
-            }
+            &data::cache::Entry::Item(ref item) => fs::File::open(&item.path)
+                .map(|f| (f.into_raw_fd() as u64, flags))
+                .map_err(util::map_error),
             _ => Err(libc::EINVAL),
         }
     }
@@ -166,7 +158,6 @@ impl fuse_mt::FilesystemMT for MediaFS {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use std::os::unix::fs::PermissionsExt;
@@ -177,7 +168,6 @@ mod tests {
 
     use super::*;
     use data::tests::*;
-
 
     /// Tests that getattr returns the expected data.
     #[test]
@@ -191,18 +181,15 @@ mod tests {
         let target_meta = target.metadata().unwrap();
         assert_eq!(
             io::Error::from_raw_os_error(libc::ENOENT).kind(),
-            mount_point.path().join(
-                "invalid/path"
-            ).metadata().unwrap_err().kind(),
+            mount_point
+                .path()
+                .join("invalid/path")
+                .metadata()
+                .unwrap_err()
+                .kind(),
         );
-        assert_eq!(
-            0o444,
-            target_meta.permissions().mode() & 0o777,
-        );
-        assert_eq!(
-            source_meta.len(),
-            target_meta.len(),
-        );
+        assert_eq!(0o444, target_meta.permissions().mode() & 0o777,);
+        assert_eq!(source_meta.len(), target_meta.len(),);
     }
 
     /// Tests that reading from the FUSE file system yields the same data as
@@ -210,21 +197,20 @@ mod tests {
     #[test]
     fn test_readdir() {
         let data = "hello world";
-        let (mount_point, _source_dir, _session, paths) =
-            mount(
-                vec![
-                    ("test1.jpg", data, 2000, 1, 1),
-                    ("test2.jpg", data, 2000, 1, 1),
-                    ("test3.jpg", data, 2000, 1, 2),
-                ].into_iter(),
-            );
+        let (mount_point, _source_dir, _session, paths) = mount(
+            vec![
+                ("test1.jpg", data, 2000, 1, 1),
+                ("test2.jpg", data, 2000, 1, 1),
+                ("test3.jpg", data, 2000, 1, 2),
+            ].into_iter(),
+        );
 
         let (_, ref directory1) = paths[0];
         assert_eq!(
             io::Error::from_raw_os_error(libc::ENOENT).kind(),
-            fs::read_dir(
-                mount_point.path().join("invalid/path")
-            ).unwrap_err().kind(),
+            fs::read_dir(mount_point.path().join("invalid/path"))
+                .unwrap_err()
+                .kind(),
         );
         assert_eq!(
             io::Error::from_raw_os_error(libc::ENOTDIR).kind(),
@@ -253,14 +239,11 @@ mod tests {
         let (ref source, ref target) = paths[0];
         assert_eq!(
             io::Error::from_raw_os_error(libc::ENOENT).kind(),
-            fs::File::open(
-                mount_point.path().join("invalid/path"),
-            ).unwrap_err().kind(),
+            fs::File::open(mount_point.path().join("invalid/path"),)
+                .unwrap_err()
+                .kind(),
         );
-        assert_eq!(
-            read_file(source),
-            read_file(target),
-        );
+        assert_eq!(read_file(source), read_file(target),);
     }
 
     /// An item to populate a file system.
@@ -272,10 +255,12 @@ mod tests {
     ///
     /// This is the tuple `(mount_point, source_dir, background_session,
     /// source_and_target_paths)`
-    type MountResult<'a> = (tempdir::TempDir,
-                            tempdir::TempDir,
-                            fuse::BackgroundSession<'a>,
-                            Vec<(path::PathBuf, path::PathBuf)>);
+    type MountResult<'a> = (
+        tempdir::TempDir,
+        tempdir::TempDir,
+        fuse::BackgroundSession<'a>,
+        Vec<(path::PathBuf, path::PathBuf)>,
+    );
 
     /// A mock source providing fixed data.
     struct MockSource {}
@@ -297,9 +282,10 @@ mod tests {
         // Create temporary directories and the file system handler
         let mount_point = tempdir::TempDir::new(&"medifs-mount").unwrap();
         let source_dir = tempdir::TempDir::new(&"medifs-source").unwrap();
-        let cache = Cache::new(sync::RwLock::new(
-            data::cache::Cache::new("All".into(), "Tagged".into()),
-        ));
+        let cache = Cache::new(sync::RwLock::new(data::cache::Cache::new(
+            "All".into(),
+            "Tagged".into(),
+        )));
         let source = Source::new(sync::RwLock::new(Box::new(MockSource {})));
         let mediafs = MediaFS::new(cache.clone(), source.clone());
 

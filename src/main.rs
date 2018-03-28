@@ -24,7 +24,6 @@ pub mod sources;
 pub mod types;
 pub mod util;
 
-
 fn main() {
     let matches = clap::App::new(crate_name!())
         .version(crate_version!())
@@ -50,7 +49,9 @@ fn main() {
         .value_of("MOUNT_POINT")
         .unwrap()
         .parse::<types::MountPoint>()
-        .unwrap_or_else(|e| { e.exit(); });
+        .unwrap_or_else(|e| {
+            e.exit();
+        });
     let fuse_options = matches
         .values_of("FUSE_OPTION")
         .map(|values| {
@@ -61,9 +62,10 @@ fn main() {
             })
         })
         .unwrap_or(vec![]);
-    let cache = files::Cache::new(sync::RwLock::new(
-        data::cache::Cache::new("All".into(), "Tagged".into()),
-    ));
+    let cache = files::Cache::new(sync::RwLock::new(data::cache::Cache::new(
+        "All".into(),
+        "Tagged".into(),
+    )));
     let source =
         files::Source::new(sync::RwLock::new((cache.clone(), matches).into()));
     let mediafs = files::MediaFS::new(cache.clone(), source.clone());
@@ -76,8 +78,7 @@ fn main() {
             .map(|s| s.as_os_str())
             .collect::<Vec<&ffi::OsStr>>()
             .as_slice(),
-    )
-    {
+    ) {
         println!("Failed to mount media file system: {}", e);
         process::exit(1);
     }

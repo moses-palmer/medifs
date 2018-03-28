@@ -1,7 +1,6 @@
 use std::fmt;
 use std::str;
 
-
 /// A tag.
 ///
 /// Tags exist in a tree structure and have a name, a full path and an optional
@@ -22,7 +21,9 @@ impl Tag {
     ///
     ///    This value may contain any number of separators.
     pub fn new(path: &str) -> Self {
-        Self { parts: path.split(Self::SEPARATOR).map(String::from).collect() }
+        Self {
+            parts: path.split(Self::SEPARATOR).map(String::from).collect(),
+        }
     }
 
     /// Creates a leaf tag.
@@ -51,10 +52,11 @@ impl Tag {
     /// # Arguments
     /// *  `other` - The tag to check.
     pub fn is_parent_of(&self, other: &Self) -> bool {
-        other.parts.len() > self.parts.len() &&
-            self.parts.iter().zip(other.parts.iter()).all(
-                |(a, b)| a == b,
-            )
+        other.parts.len() > self.parts.len()
+            && self.parts
+                .iter()
+                .zip(other.parts.iter())
+                .all(|(a, b)| a == b)
     }
 
     /// Returns the leaf name.
@@ -84,8 +86,8 @@ impl str::FromStr for Tag {
     /// This function will succeed unless the string is empty, or starts or ends
     /// with a separator.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.len() == 0 || s.chars().next() == Some(Self::SEPARATOR) ||
-            s.chars().last() == Some(Self::SEPARATOR)
+        if s.len() == 0 || s.chars().next() == Some(Self::SEPARATOR)
+            || s.chars().last() == Some(Self::SEPARATOR)
         {
             Err(())
         } else {
@@ -93,7 +95,6 @@ impl str::FromStr for Tag {
         }
     }
 }
-
 
 #[cfg(test)]
 mod test {
