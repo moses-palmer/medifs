@@ -203,6 +203,7 @@ mod tests {
 
     use mime;
 
+    use data::tests::*;
     use super::*;
 
     /// Tests creation of item of unknown type.
@@ -296,32 +297,5 @@ mod tests {
         assert_eq!(vec![items[1].clone()], collection.items);
         assert_eq!(items, *added.read().unwrap());
         assert_eq!(vec![items[0].clone()], *removed.read().unwrap());
-    }
-
-    type SharedList = sync::Arc<sync::RwLock<Vec<Item>>>;
-
-    struct Monitor {
-        pub added: SharedList,
-        pub removed: SharedList,
-    }
-
-    impl Monitor {
-        pub fn new(added: SharedList, removed: SharedList) -> Self {
-            Self { added, removed }
-        }
-
-        pub fn list() -> SharedList {
-            sync::Arc::new(sync::RwLock::new(Vec::new()))
-        }
-    }
-
-    impl ItemMonitor for Monitor {
-        fn item_added(&self, item: &Item) {
-            self.added.write().unwrap().push(item.clone());
-        }
-
-        fn item_removed(&self, item: &Item) {
-            self.removed.write().unwrap().push(item.clone());
-        }
     }
 }

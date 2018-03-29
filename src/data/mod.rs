@@ -22,6 +22,7 @@ pub mod tests {
     use std::fs;
     use std::io::Write;
     use std::path;
+    use std::sync;
 
     /// Creates a simple item.
     ///
@@ -59,5 +60,43 @@ pub mod tests {
             .unwrap();
 
         item(path.to_str().unwrap(), year, month, day)
+    }
+
+    /// A sharable list.
+    pub type SharedList = sync::Arc<sync::RwLock<Vec<Item>>>;
+
+    /// A simple item monitor that stores items in shared lists.
+    pub struct Monitor {
+        /// All items that have been hitherto added.
+        pub added: SharedList,
+
+        /// All items that have been hitherto removed.
+        pub removed: SharedList,
+    }
+
+    impl Monitor {
+        /// Creates a new monitor.
+        ///
+        /// # Arguments
+        /// *  `added` - A list into which to store added items.
+        /// *  `removed` - A list into which to store removed items.
+        pub fn new(added: SharedList, removed: SharedList) -> Self {
+            Self { added, removed }
+        }
+
+        /// Creates a shared list.
+        pub fn list() -> SharedList {
+            sync::Arc::new(sync::RwLock::new(Vec::new()))
+        }
+    }
+
+    impl ItemMonitor for Monitor {
+        fn item_added(&self, item: &Item) {
+            self.added.write().unwrap().push(item.clone());
+        }
+
+        fn item_removed(&self, item: &Item) {
+            self.removed.write().unwrap().push(item.clone());
+        }
     }
 }
