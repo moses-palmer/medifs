@@ -9,6 +9,9 @@ use data;
 mod dispatch;
 pub use self::dispatch::DispatchLocator;
 
+mod timestamps;
+pub use self::timestamps::TimestampsLocator;
+
 /// A directory tree.
 pub type Tree = collections::HashSet<ffi::OsString>;
 
