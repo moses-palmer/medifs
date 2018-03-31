@@ -6,6 +6,9 @@ use time;
 
 use data;
 
+mod dispatch;
+pub use self::dispatch::DispatchLocator;
+
 /// A directory tree.
 pub type Tree = collections::HashSet<ffi::OsString>;
 
