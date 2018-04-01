@@ -57,7 +57,7 @@ impl Entry {
 }
 
 /// A proxy for some tree structure.
-pub trait Locator {
+pub trait Locator: data::ItemMonitor {
     /// Locates an item by path components.
     ///
     /// # Arguments
@@ -126,4 +126,6 @@ mod tests {
                 })
         }
     }
+
+    impl data::ItemMonitor for DummyLocator {}
 }

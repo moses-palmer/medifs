@@ -73,6 +73,8 @@ impl Locator for DispatchLocator {
     }
 }
 
+impl data::ItemMonitor for DispatchLocator {}
+
 #[cfg(test)]
 mod tests {
     use std::collections;
