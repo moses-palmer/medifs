@@ -73,7 +73,15 @@ impl Locator for DispatchLocator {
     }
 }
 
-impl data::ItemMonitor for DispatchLocator {}
+impl data::ItemMonitor for DispatchLocator {
+    fn item_added(&self, item: &data::Item) {
+        self.dispatch.values().for_each(|d| d.item_added(item))
+    }
+
+    fn item_removed(&self, item: &data::Item) {
+        self.dispatch.values().for_each(|d| d.item_removed(item))
+    }
+}
 
 #[cfg(test)]
 mod tests {
