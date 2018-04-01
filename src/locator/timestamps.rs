@@ -32,6 +32,8 @@ impl Locator for TimestampsLocator {
     }
 }
 
+impl data::ItemMonitor for TimestampsLocator {}
+
 impl TimestampsLocator {
     /// Creates a new timestamp locator.
     pub fn new() -> Self {
